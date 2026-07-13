@@ -1,0 +1,27 @@
+{
+  "name": "budgeteer",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:web": "bun --filter web dev",
+    "dev:api": "bun --filter api dev",
+    "dev": "bun run dev:api & bun run dev:web",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "bun x biome check --write",
+      "bun --filter web exec tsc --noEmit",
+      "bun --filter api exec tsc --noEmit"
+    ]
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.8"
+  }
+}

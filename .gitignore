@@ -1,0 +1,10 @@
+# Database
+apps/api/data/*.db
+apps/api/data/*.db-journal
+
+# Dependencies
+node_modules/
+
+# Build
+dist/
+.superpowers/
