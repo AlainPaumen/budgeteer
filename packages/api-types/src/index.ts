@@ -1,2 +1,2 @@
-export { edenTreaty } from 'eden-treaty';
-export type { App } from '../../../apps/api/src/index';
+export { edenTreaty } from "@elysiajs/eden";
+export type { App } from "../../../apps/api/src/index";
