@@ -100,3 +100,6 @@ When generating, styling, or suggesting raw JSX for Shadcn UI components, do not
 
 * **Schema Modification**: Do not write raw SQL strings to create or alter tables. All changes must be written directly inside `apps/api/src/db/schema.ts`.
 * **Migration Generation**: After changing the schema, you must run `bun --filter api exec drizzle-kit generate` to commit the transaction blueprint to the codebase history.
+* **id**:  id fields should be integer primary key
+* **tracking**:  each record should have 'created_by' (foreignkey to users table), 'created_at', 'updated_by' (foreignkey to users table), 'updated_at' fields
+* **deleting rows**:  default we are performing a delete on a row.  For certain tables, we need to implement an isActive flag, that is per default true.  Ask when defining a schema, which to use.
