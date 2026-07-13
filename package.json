@@ -18,10 +18,14 @@
       "bun --filter api exec tsc --noEmit"
     ]
   },
-  "dependencies": {},
+  "dependencies": {
+    "@better-auth/drizzle-adapter": "^1.6.23",
+    "better-auth": "^1.6.23"
+  },
   "devDependencies": {
     "@biomejs/biome": "2.5.3",
     "api": "workspace:*",
+    "better-sqlite3": "^12.11.1",
     "bun-types": "^1.3.14",
     "husky": "^9.1.7",
     "lint-staged": "^17.0.8"
