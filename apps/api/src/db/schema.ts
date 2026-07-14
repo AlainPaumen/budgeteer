@@ -139,3 +139,33 @@ export const serviceRelations = relations(services, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
+
+export const costTypes = sqliteTable("cost_types", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	name: text("name").notNull().unique(),
+	notes: text("notes"),
+	isFixed: integer("is_fixed", { mode: "boolean" }).default(true).notNull(),
+	isCapex: integer("is_capex", { mode: "boolean" }).default(false).notNull(),
+	isActive: integer("is_active", { mode: "boolean" }).default(true).notNull(),
+	createdBy: text("created_by")
+		.notNull()
+		.references(() => user.id),
+	createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+	updatedBy: text("updated_by")
+		.notNull()
+		.references(() => user.id),
+	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+		.$onUpdate(() => new Date())
+		.notNull(),
+});
+
+export const costTypeRelations = relations(costTypes, ({ one }) => ({
+	createdByUser: one(user, {
+		fields: [costTypes.createdBy],
+		references: [user.id],
+	}),
+	updatedByUser: one(user, {
+		fields: [costTypes.updatedBy],
+		references: [user.id],
+	}),
+}));

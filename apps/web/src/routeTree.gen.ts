@@ -8,185 +8,216 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
-import { Route as AuthSignupRouteImport } from './routes/auth.signup'
-import { Route as AuthLoginRouteImport } from './routes/auth.login'
-import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated.suppliers'
-import { Route as AuthenticatedServicesRouteImport } from './routes/_authenticated.services'
+import { Route as rootRouteImport } from "./routes/__root";
+import { Route as AuthenticatedRouteImport } from "./routes/_authenticated";
+import { Route as AuthenticatedCostTypesRouteImport } from "./routes/_authenticated.cost-types";
+import { Route as AuthenticatedIndexRouteImport } from "./routes/_authenticated.index";
+import { Route as AuthenticatedServicesRouteImport } from "./routes/_authenticated.services";
+import { Route as AuthenticatedSuppliersRouteImport } from "./routes/_authenticated.suppliers";
+import { Route as AuthRouteImport } from "./routes/auth";
+import { Route as AuthLoginRouteImport } from "./routes/auth.login";
+import { Route as AuthSignupRouteImport } from "./routes/auth.signup";
 
 const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/auth",
+	path: "/auth",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
+	id: "/_authenticated",
+	getParentRoute: () => rootRouteImport,
+} as any);
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
+	id: "/",
+	path: "/",
+	getParentRoute: () => AuthenticatedRoute,
+} as any);
 const AuthSignupRoute = AuthSignupRouteImport.update({
-  id: '/signup',
-  path: '/signup',
-  getParentRoute: () => AuthRoute,
-} as any)
+	id: "/signup",
+	path: "/signup",
+	getParentRoute: () => AuthRoute,
+} as any);
 const AuthLoginRoute = AuthLoginRouteImport.update({
-  id: '/login',
-  path: '/login',
-  getParentRoute: () => AuthRoute,
-} as any)
+	id: "/login",
+	path: "/login",
+	getParentRoute: () => AuthRoute,
+} as any);
 const AuthenticatedSuppliersRoute = AuthenticatedSuppliersRouteImport.update({
-  id: '/suppliers',
-  path: '/suppliers',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
+	id: "/suppliers",
+	path: "/suppliers",
+	getParentRoute: () => AuthenticatedRoute,
+} as any);
 const AuthenticatedServicesRoute = AuthenticatedServicesRouteImport.update({
-  id: '/services',
-  path: '/services',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
+	id: "/services",
+	path: "/services",
+	getParentRoute: () => AuthenticatedRoute,
+} as any);
+const AuthenticatedCostTypesRoute = AuthenticatedCostTypesRouteImport.update({
+	id: "/cost-types",
+	path: "/cost-types",
+	getParentRoute: () => AuthenticatedRoute,
+} as any);
 
 export interface FileRoutesByFullPath {
-  '/': typeof AuthenticatedIndexRoute
-  '/auth': typeof AuthRouteWithChildren
-  '/services': typeof AuthenticatedServicesRoute
-  '/suppliers': typeof AuthenticatedSuppliersRoute
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/signup': typeof AuthSignupRoute
+	"/": typeof AuthenticatedIndexRoute;
+	"/auth": typeof AuthRouteWithChildren;
+	"/cost-types": typeof AuthenticatedCostTypesRoute;
+	"/services": typeof AuthenticatedServicesRoute;
+	"/suppliers": typeof AuthenticatedSuppliersRoute;
+	"/auth/login": typeof AuthLoginRoute;
+	"/auth/signup": typeof AuthSignupRoute;
 }
 export interface FileRoutesByTo {
-  '/auth': typeof AuthRouteWithChildren
-  '/services': typeof AuthenticatedServicesRoute
-  '/suppliers': typeof AuthenticatedSuppliersRoute
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/signup': typeof AuthSignupRoute
-  '/': typeof AuthenticatedIndexRoute
+	"/auth": typeof AuthRouteWithChildren;
+	"/cost-types": typeof AuthenticatedCostTypesRoute;
+	"/services": typeof AuthenticatedServicesRoute;
+	"/suppliers": typeof AuthenticatedSuppliersRoute;
+	"/auth/login": typeof AuthLoginRoute;
+	"/auth/signup": typeof AuthSignupRoute;
+	"/": typeof AuthenticatedIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/auth': typeof AuthRouteWithChildren
-  '/_authenticated/services': typeof AuthenticatedServicesRoute
-  '/_authenticated/suppliers': typeof AuthenticatedSuppliersRoute
-  '/auth/login': typeof AuthLoginRoute
-  '/auth/signup': typeof AuthSignupRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
+	__root__: typeof rootRouteImport;
+	"/_authenticated": typeof AuthenticatedRouteWithChildren;
+	"/auth": typeof AuthRouteWithChildren;
+	"/_authenticated/cost-types": typeof AuthenticatedCostTypesRoute;
+	"/_authenticated/services": typeof AuthenticatedServicesRoute;
+	"/_authenticated/suppliers": typeof AuthenticatedSuppliersRoute;
+	"/auth/login": typeof AuthLoginRoute;
+	"/auth/signup": typeof AuthSignupRoute;
+	"/_authenticated/": typeof AuthenticatedIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths:
-    '/' | '/auth' | '/services' | '/suppliers' | '/auth/login' | '/auth/signup'
-  fileRoutesByTo: FileRoutesByTo
-  to:
-    '/auth' | '/services' | '/suppliers' | '/auth/login' | '/auth/signup' | '/'
-  id:
-    | '__root__'
-    | '/_authenticated'
-    | '/auth'
-    | '/_authenticated/services'
-    | '/_authenticated/suppliers'
-    | '/auth/login'
-    | '/auth/signup'
-    | '/_authenticated/'
-  fileRoutesById: FileRoutesById
+	fileRoutesByFullPath: FileRoutesByFullPath;
+	fullPaths:
+		| "/"
+		| "/auth"
+		| "/cost-types"
+		| "/services"
+		| "/suppliers"
+		| "/auth/login"
+		| "/auth/signup";
+	fileRoutesByTo: FileRoutesByTo;
+	to:
+		| "/auth"
+		| "/cost-types"
+		| "/services"
+		| "/suppliers"
+		| "/auth/login"
+		| "/auth/signup"
+		| "/";
+	id:
+		| "__root__"
+		| "/_authenticated"
+		| "/auth"
+		| "/_authenticated/cost-types"
+		| "/_authenticated/services"
+		| "/_authenticated/suppliers"
+		| "/auth/login"
+		| "/auth/signup"
+		| "/_authenticated/";
+	fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  AuthRoute: typeof AuthRouteWithChildren
+	AuthenticatedRoute: typeof AuthenticatedRouteWithChildren;
+	AuthRoute: typeof AuthRouteWithChildren;
 }
 
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/auth/signup': {
-      id: '/auth/signup'
-      path: '/signup'
-      fullPath: '/auth/signup'
-      preLoaderRoute: typeof AuthSignupRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/auth/login': {
-      id: '/auth/login'
-      path: '/login'
-      fullPath: '/auth/login'
-      preLoaderRoute: typeof AuthLoginRouteImport
-      parentRoute: typeof AuthRoute
-    }
-    '/_authenticated/suppliers': {
-      id: '/_authenticated/suppliers'
-      path: '/suppliers'
-      fullPath: '/suppliers'
-      preLoaderRoute: typeof AuthenticatedSuppliersRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/services': {
-      id: '/_authenticated/services'
-      path: '/services'
-      fullPath: '/services'
-      preLoaderRoute: typeof AuthenticatedServicesRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-  }
+declare module "@tanstack/react-router" {
+	interface FileRoutesByPath {
+		"/auth": {
+			id: "/auth";
+			path: "/auth";
+			fullPath: "/auth";
+			preLoaderRoute: typeof AuthRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/_authenticated": {
+			id: "/_authenticated";
+			path: "";
+			fullPath: "/";
+			preLoaderRoute: typeof AuthenticatedRouteImport;
+			parentRoute: typeof rootRouteImport;
+		};
+		"/_authenticated/": {
+			id: "/_authenticated/";
+			path: "/";
+			fullPath: "/";
+			preLoaderRoute: typeof AuthenticatedIndexRouteImport;
+			parentRoute: typeof AuthenticatedRoute;
+		};
+		"/auth/signup": {
+			id: "/auth/signup";
+			path: "/signup";
+			fullPath: "/auth/signup";
+			preLoaderRoute: typeof AuthSignupRouteImport;
+			parentRoute: typeof AuthRoute;
+		};
+		"/auth/login": {
+			id: "/auth/login";
+			path: "/login";
+			fullPath: "/auth/login";
+			preLoaderRoute: typeof AuthLoginRouteImport;
+			parentRoute: typeof AuthRoute;
+		};
+		"/_authenticated/suppliers": {
+			id: "/_authenticated/suppliers";
+			path: "/suppliers";
+			fullPath: "/suppliers";
+			preLoaderRoute: typeof AuthenticatedSuppliersRouteImport;
+			parentRoute: typeof AuthenticatedRoute;
+		};
+		"/_authenticated/services": {
+			id: "/_authenticated/services";
+			path: "/services";
+			fullPath: "/services";
+			preLoaderRoute: typeof AuthenticatedServicesRouteImport;
+			parentRoute: typeof AuthenticatedRoute;
+		};
+		"/_authenticated/cost-types": {
+			id: "/_authenticated/cost-types";
+			path: "/cost-types";
+			fullPath: "/cost-types";
+			preLoaderRoute: typeof AuthenticatedCostTypesRouteImport;
+			parentRoute: typeof AuthenticatedRoute;
+		};
+	}
 }
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedServicesRoute: typeof AuthenticatedServicesRoute
-  AuthenticatedSuppliersRoute: typeof AuthenticatedSuppliersRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+	AuthenticatedCostTypesRoute: typeof AuthenticatedCostTypesRoute;
+	AuthenticatedServicesRoute: typeof AuthenticatedServicesRoute;
+	AuthenticatedSuppliersRoute: typeof AuthenticatedSuppliersRoute;
+	AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute;
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedServicesRoute: AuthenticatedServicesRoute,
-  AuthenticatedSuppliersRoute: AuthenticatedSuppliersRoute,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-}
+	AuthenticatedCostTypesRoute: AuthenticatedCostTypesRoute,
+	AuthenticatedServicesRoute: AuthenticatedServicesRoute,
+	AuthenticatedSuppliersRoute: AuthenticatedSuppliersRoute,
+	AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+};
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
-)
+	AuthenticatedRouteChildren,
+);
 
 interface AuthRouteChildren {
-  AuthLoginRoute: typeof AuthLoginRoute
-  AuthSignupRoute: typeof AuthSignupRoute
+	AuthLoginRoute: typeof AuthLoginRoute;
+	AuthSignupRoute: typeof AuthSignupRoute;
 }
 
 const AuthRouteChildren: AuthRouteChildren = {
-  AuthLoginRoute: AuthLoginRoute,
-  AuthSignupRoute: AuthSignupRoute,
-}
+	AuthLoginRoute: AuthLoginRoute,
+	AuthSignupRoute: AuthSignupRoute,
+};
 
-const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren);
 
 const rootRouteChildren: RootRouteChildren = {
-  AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  AuthRoute: AuthRouteWithChildren,
-}
+	AuthenticatedRoute: AuthenticatedRouteWithChildren,
+	AuthRoute: AuthRouteWithChildren,
+};
 export const routeTree = rootRouteImport
-  ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+	._addFileChildren(rootRouteChildren)
+	._addFileTypes<FileRouteTypes>();

@@ -1,5 +1,6 @@
 import {
 	Building2Icon,
+	FolderTreeIcon,
 	FrameIcon,
 	LifeBuoyIcon,
 	MapIcon,
@@ -111,6 +112,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							<SidebarMenuButton render={<a href="/services" />}>
 								<WrenchIcon />
 								<span>Services</span>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton render={<a href="/cost-types" />}>
+								<FolderTreeIcon />
+								<span>Cost Types</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 					</SidebarMenu>
