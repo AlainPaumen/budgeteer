@@ -1,6 +1,6 @@
-import { Elysia, t } from "elysia";
+import { Elysia } from "elysia";
 import { z } from "zod";
-import { eq, desc, asc, like, sql, and, count } from "drizzle-orm";
+import { eq, desc, asc, like, and, count } from "drizzle-orm";
 import { db } from "../db";
 import { suppliers } from "../db/schema";
 import { auth } from "../auth";
@@ -108,7 +108,7 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 		const existing = await db
 			.select({ id: suppliers.id })
 			.from(suppliers)
-			.where(eq(suppliers.name, name))
+			.where(and(eq(suppliers.name, name), eq(suppliers.isActive, true)))
 			.limit(1);
 
 		if (existing.length > 0) {
@@ -177,7 +177,7 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 			const nameTaken = await db
 				.select({ id: suppliers.id })
 				.from(suppliers)
-				.where(eq(suppliers.name, name))
+				.where(and(eq(suppliers.name, name), eq(suppliers.isActive, true)))
 				.limit(1);
 
 			if (nameTaken.length > 0) {
