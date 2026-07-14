@@ -1,92 +1,61 @@
 # Categories Feature Design
 
+**Date:** 2026-07-14  
+**Author:** opencode-agent  
+**Status:** Approved
+
 ## Overview
 
-Add a Categories CRUD feature mirroring the existing Suppliers pattern, with two additional boolean fields: `isFixed` and `isCapex`.
+Add a new "Categories" CRUD feature to the budgeteer app, following the same pattern as the Suppliers feature.
+
+## Requirements
+
+- **Entity:** Category
+- **Fields:** name (required, unique), notes (optional), isActive, tracking fields
+- **Icon:** FoldersIcon from lucide-react
+- **Navigation:** Add to sidebar
 
 ## Schema
 
-Table: `categories`
-
-| Column | Type | Constraints | Default |
-|--------|------|-------------|---------|
-| id | integer | PK, auto-increment | — |
-| name | text | NOT NULL, UNIQUE | — |
-| notes | text | nullable | NULL |
-| isFixed | integer (boolean) | NOT NULL | true |
-| isCapex | integer (boolean) | NOT NULL | false |
-| isActive | integer (boolean) | NOT NULL | true |
-| createdBy | text | NOT NULL, FK → user.id | — |
-| createdAt | integer (timestamp_ms) | NOT NULL | — |
-| updatedBy | text | NOT NULL, FK → user.id | — |
-| updatedAt | integer (timestamp_ms) | NOT NULL | — |
+```typescript
+export const categories = sqliteTable("categories", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  name: text("name").notNull().unique(),
+  notes: text("notes"),
+  isActive: integer("is_active", { mode: "boolean" }).default(true).notNull(),
+  createdBy: text("created_by").notNull().references(() => user.id),
+  createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+  updatedBy: text("updated_by").notNull().references(() => user.id),
+  updatedAt: integer("updated_at", { mode: "timestamp_ms" }).$onUpdate(() => new Date()).notNull(),
+});
+```
 
 ## API Endpoints
 
-Base path: `/api/categories`
+- `GET /api/categories` - List with pagination, search, sort, filter by isActive
+- `POST /api/categories` - Create new category
+- `PATCH /api/categories/:id` - Update category (including is_active for undelete)
+- `DELETE /api/categories/:id` - Soft delete (set isActive = false)
 
-### GET /
-List categories with pagination.
+## Frontend Components
 
-**Query params:** page, limit, search, is_active, sort (name), order (asc/desc)
+- `_authenticated.categories.tsx` - List page with table, search, pagination, sort, show inactive filter
+- `category-form-dialog.tsx` - Create/edit form using TanStack Form with Zod validation
+- `delete-category-dialog.tsx` - Delete/undelete confirmation dialog
 
-**Response:**
-```json
-{
-  "data": [...],
-  "pagination": { "page": 1, "limit": 20, "total": 45, "totalPages": 3 }
-}
-```
+## Sidebar
 
-### POST /
-Create a category.
+Add Categories to sidebar with FoldersIcon, positioned after Services.
 
-**Body:** `{ name: string, notes?: string | null, isFixed?: boolean, isCapex?: boolean }`
+## Implementation Steps
 
-**Validations:** name required, 1–255 chars; notes max 1000 chars, nullable; isFixed/isCapex optional booleans.
-
-**Uniqueness:** Duplicate active name → 409.
-
-### PATCH /:id
-Update a category. Works on both active and inactive items (enables undelete).
-
-**Body:** `{ name?: string, notes?: string | null, isFixed?: boolean, isCapex?: boolean, is_active?: boolean }`
-
-**Validations:** Same as POST, all fields optional.
-
-### DELETE /:id
-Soft delete — sets `isActive = false`. Only works on active items.
-
-## Frontend
-
-### Route
-`/categories` — `_authenticated.categories.tsx`
-
-### Table Columns
-| Column | Notes |
-|--------|-------|
-| Name | Sortable (default asc) |
-| Notes | Truncated, "—" if empty |
-| Fixed | Badge: "Fixed" or "Variable" |
-| Capex | Badge: "Capex" or "Opex" |
-| Actions | Edit (pencil) + Delete/Undelete icon |
-
-### Form Dialog
-Fields:
-- Name (text input, required)
-- Notes (textarea, optional)
-- Is Fixed (checkbox, default checked)
-- Is Capex (checkbox, default unchecked)
-
-### Filters
-- Search box (searches name)
-- "Show inactive" checkbox (right-aligned)
-- Sort toggle on Name column
-
-### Sidebar
-- Icon: `FolderTree` from lucide-react
-- Link: `/categories`
-- Label: "Categories"
-
-## Pattern Reference
-Mirrors `apps/web/src/routes/_authenticated.suppliers.tsx` and related components exactly.
+1. Add schema to `apps/api/src/db/schema.ts`
+2. Create migration `apps/api/src/db/migrations/0007_add_categories.sql`
+3. Create API route `apps/api/src/routes/categories.ts`
+4. Mount route in `apps/api/src/index.ts`
+5. Create frontend route `apps/web/src/routes/_authenticated.categories.tsx`
+6. Create form dialog `apps/web/src/components/category-form-dialog.tsx`
+7. Create delete dialog `apps/web/src/components/delete-category-dialog.tsx`
+8. Update sidebar `apps/web/src/components/app-sidebar.tsx`
+9. Create database table
+10. Test and commit
