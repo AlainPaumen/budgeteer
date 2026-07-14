@@ -1,5 +1,5 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useForm } from "@tanstack/react-form";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -63,8 +63,7 @@ function LoginPage() {
 				<form.Field
 					name="email"
 					validators={{
-						onChange: ({ value }) =>
-							!value ? "Email is required" : undefined,
+						onChange: ({ value }) => (!value ? "Email is required" : undefined),
 					}}
 					children={(field) => (
 						<div className="space-y-2">
@@ -123,11 +122,7 @@ function LoginPage() {
 						isSubmitting: state.isSubmitting,
 					})}
 					children={({ canSubmit, isSubmitting }) => (
-						<Button
-							type="submit"
-							className="w-full"
-							disabled={!canSubmit}
-						>
+						<Button type="submit" className="w-full" disabled={!canSubmit}>
 							{isSubmitting ? "Signing in..." : "Log in"}
 						</Button>
 					)}

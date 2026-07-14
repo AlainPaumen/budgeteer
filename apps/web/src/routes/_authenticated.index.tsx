@@ -40,7 +40,7 @@ function HomePage() {
 					<span className="font-mono text-green-600">{data?.status}</span>
 				</p>
 				<p className="mt-2 text-sm text-gray-400">
-					Server time: {data?.timestamp}
+					Server time: {String(data?.timestamp)}
 				</p>
 			</div>
 		</div>
