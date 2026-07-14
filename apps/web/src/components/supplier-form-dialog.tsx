@@ -1,6 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -10,10 +11,17 @@ import {
 	DialogHeader,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { eden } from "@/lib/api";
+
+const supplierSchema = z.object({
+	name: z.string().min(1, "Name is required").max(255),
+	notes: z.string().max(1000).nullable(),
+});
+
+type FormValues = z.infer<typeof supplierSchema>;
 
 interface Supplier {
 	id: number;
@@ -39,6 +47,11 @@ export function SupplierFormDialog({
 }: SupplierFormDialogProps) {
 	const queryClient = useQueryClient();
 	const isEditing = !!supplier;
+
+	const defaultValues: FormValues = {
+		name: supplier?.name ?? "",
+		notes: supplier?.notes ?? "",
+	};
 
 	const createMutation = useMutation({
 		mutationFn: async (data: { name: string; notes?: string | null }) => {
@@ -67,9 +80,9 @@ export function SupplierFormDialog({
 	});
 
 	const form = useForm({
-		defaultValues: {
-			name: supplier?.name ?? "",
-			notes: supplier?.notes ?? "",
+		defaultValues,
+		validators: {
+			onSubmit: supplierSchema,
 		},
 		onSubmit: async ({ value }) => {
 			const data = {
@@ -136,51 +149,54 @@ export function SupplierFormDialog({
 						e.stopPropagation();
 						form.handleSubmit();
 					}}
+					noValidate
 					className="space-y-4"
 				>
 					<form.Field
 						name="name"
-						validators={{
-							onChange: ({ value }) =>
-								!value ? "Name is required" : undefined,
-						}}
 						// biome-ignore lint/correctness/noChildrenProp: TanStack Form render prop
-						children={(field) => (
-							<div className="space-y-2">
-								<Label htmlFor={field.name}>Name</Label>
-								<Input
-									id={field.name}
-									name={field.name}
-									placeholder="e.g. Electric Company"
-									value={field.state.value}
-									onBlur={field.handleBlur}
-									onChange={(e) => field.handleChange(e.target.value)}
-								/>
-								{field.state.meta.isTouched &&
-									field.state.meta.errors.length > 0 && (
-										<p className="text-xs text-destructive">
-											{field.state.meta.errors.join(", ")}
-										</p>
-									)}
-							</div>
-						)}
+						children={(field) => {
+							const isInvalid =
+								field.state.meta.isTouched && !field.state.meta.isValid;
+							return (
+								<Field data-invalid={isInvalid}>
+									<FieldLabel htmlFor="name" className="required">
+										Name
+									</FieldLabel>
+									<Input
+										id="name"
+										name="name"
+										placeholder="e.g. Electric Company"
+										value={field.state.value}
+										onBlur={field.handleBlur}
+										onChange={(e) => field.handleChange(e.target.value)}
+										aria-invalid={isInvalid}
+									/>
+									{isInvalid && <FieldError errors={field.state.meta.errors} />}
+								</Field>
+							);
+						}}
 					/>
 
 					<form.Field
 						name="notes"
 						// biome-ignore lint/correctness/noChildrenProp: TanStack Form render prop
 						children={(field) => (
-							<div className="space-y-2">
-								<Label htmlFor={field.name}>Notes</Label>
+							<Field>
+								<FieldLabel htmlFor="notes">Notes</FieldLabel>
 								<Textarea
-									id={field.name}
-									name={field.name}
+									id="notes"
+									name="notes"
 									placeholder="Optional notes..."
-									value={field.state.value}
+									value={field.state.value ?? ""}
 									onBlur={field.handleBlur}
-									onChange={(e) => field.handleChange(e.target.value)}
+									onChange={(e) =>
+										field.handleChange(
+											e.target.value.trim() === "" ? null : e.target.value,
+										)
+									}
 								/>
-							</div>
+							</Field>
 						)}
 					/>
 
