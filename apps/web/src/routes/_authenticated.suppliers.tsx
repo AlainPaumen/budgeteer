@@ -1,10 +1,18 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { PencilIcon, PlusIcon, SearchIcon, Trash2Icon } from "lucide-react";
+import {
+	ArrowDownAZ,
+	ArrowUpAZ,
+	PencilIcon,
+	PlusIcon,
+	SearchIcon,
+	Trash2Icon,
+} from "lucide-react";
 import { useState } from "react";
 import { DeleteSupplierDialog } from "@/components/delete-supplier-dialog";
 import { SupplierFormDialog } from "@/components/supplier-form-dialog";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import {
 	Table,
@@ -45,6 +53,8 @@ function SuppliersPage() {
 	const [page, setPage] = useState(1);
 	const [search, setSearch] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState("");
+	const [order, setOrder] = useState<"asc" | "desc">("asc");
+	const [showInactive, setShowInactive] = useState(false);
 	const [formOpen, setFormOpen] = useState(false);
 	const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
 	const [deleteOpen, setDeleteOpen] = useState(false);
@@ -59,15 +69,18 @@ function SuppliersPage() {
 	};
 
 	const { data, isLoading } = useQuery({
-		queryKey: ["suppliers", { page, search: debouncedSearch }],
+		queryKey: [
+			"suppliers",
+			{ page, search: debouncedSearch, order, showInactive },
+		],
 		queryFn: async () => {
 			const params: Record<string, string> = {
 				page: String(page),
 				limit: "20",
-				is_active: "true",
 				sort: "name",
-				order: "asc",
+				order,
 			};
+			if (!showInactive) params.is_active = "true";
 			if (debouncedSearch) params.search = debouncedSearch;
 			const res = await eden.api.suppliers.get({ query: params });
 			if (res.error) throw res.error;
@@ -93,14 +106,27 @@ function SuppliersPage() {
 				</Button>
 			</div>
 
-			<div className="relative max-w-sm">
-				<SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-				<Input
-					placeholder="Search suppliers..."
-					className="pl-8"
-					value={search}
-					onChange={(e) => handleSearchChange(e.target.value)}
-				/>
+			<div className="flex items-center justify-between">
+				<div className="relative max-w-sm">
+					<SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
+					<Input
+						placeholder="Search suppliers..."
+						className="pl-8"
+						value={search}
+						onChange={(e) => handleSearchChange(e.target.value)}
+					/>
+				</div>
+				{/* biome-ignore lint/a11y/noLabelWithoutControl: checkbox is nested inside label */}
+				<label className="flex items-center gap-2 text-sm text-muted-foreground">
+					<Checkbox
+						checked={showInactive}
+						onCheckedChange={(checked) => {
+							setShowInactive(checked === true);
+							setPage(1);
+						}}
+					/>
+					Show inactive
+				</label>
 			</div>
 
 			{isLoading ? (
@@ -118,7 +144,22 @@ function SuppliersPage() {
 					<Table>
 						<TableHeader>
 							<TableRow>
-								<TableHead>Name</TableHead>
+								<TableHead>
+									<button
+										type="button"
+										className="inline-flex items-center gap-1 hover:text-foreground"
+										onClick={() =>
+											setOrder((o) => (o === "asc" ? "desc" : "asc"))
+										}
+									>
+										Name
+										{order === "asc" ? (
+											<ArrowDownAZ className="size-3" />
+										) : (
+											<ArrowUpAZ className="size-3" />
+										)}
+									</button>
+								</TableHead>
 								<TableHead>Notes</TableHead>
 								<TableHead className="w-24">Actions</TableHead>
 							</TableRow>

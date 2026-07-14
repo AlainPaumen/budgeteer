@@ -113,7 +113,14 @@ export function SupplierFormDialog({
 
 				{error && (
 					<div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
-						{"message" in error ? error.message : "An error occurred"}
+						{"value" in error &&
+						error.value &&
+						typeof error.value === "object" &&
+						"error" in error.value
+							? String(error.value.error)
+							: "message" in error
+								? String(error.message)
+								: "An error occurred"}
 					</div>
 				)}
 

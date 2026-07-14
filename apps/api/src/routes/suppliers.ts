@@ -1,9 +1,9 @@
+import { and, asc, count, desc, eq, like } from "drizzle-orm";
 import { Elysia } from "elysia";
 import { z } from "zod";
-import { eq, desc, asc, like, and, count } from "drizzle-orm";
+import { auth } from "../auth";
 import { db } from "../db";
 import { suppliers } from "../db/schema";
-import { auth } from "../auth";
 
 const createSupplierSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
@@ -19,7 +19,7 @@ const listQuerySchema = z.object({
 	page: z.coerce.number().int().positive().default(1),
 	limit: z.coerce.number().int().positive().max(100).default(20),
 	search: z.string().optional(),
-	is_active: z.coerce.boolean().default(true),
+	is_active: z.coerce.boolean().optional(),
 	sort: z.enum(["name"]).default("name"),
 	order: z.enum(["asc", "desc"]).default("asc"),
 });
@@ -44,7 +44,10 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 		const parsed = listQuerySchema.safeParse(query);
 		if (!parsed.success) {
 			return new Response(
-				JSON.stringify({ error: "Invalid query parameters", details: parsed.error.flatten() }),
+				JSON.stringify({
+					error: "Invalid query parameters",
+					details: parsed.error.flatten(),
+				}),
 				{ status: 400, headers: { "Content-Type": "application/json" } },
 			);
 		}
@@ -52,7 +55,10 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 		const { page, limit, search, is_active, sort, order } = parsed.data;
 		const offset = (page - 1) * limit;
 
-		const conditions = [eq(suppliers.isActive, is_active)];
+		const conditions = [];
+		if (is_active !== undefined) {
+			conditions.push(eq(suppliers.isActive, is_active));
+		}
 		if (search) {
 			conditions.push(like(suppliers.name, `%${search}%`));
 		}
@@ -68,10 +74,7 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 				.orderBy(orderFn(suppliers[sort]))
 				.limit(limit)
 				.offset(offset),
-			db
-				.select({ value: count() })
-				.from(suppliers)
-				.where(where),
+			db.select({ value: count() }).from(suppliers).where(where),
 		]);
 
 		const total = totalResult[0]?.value ?? 0;
@@ -98,7 +101,10 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 		const parsed = createSupplierSchema.safeParse(body);
 		if (!parsed.success) {
 			return new Response(
-				JSON.stringify({ error: "Validation failed", details: parsed.error.flatten() }),
+				JSON.stringify({
+					error: "Validation failed",
+					details: parsed.error.flatten(),
+				}),
 				{ status: 422, headers: { "Content-Type": "application/json" } },
 			);
 		}
@@ -145,17 +151,20 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 		const parsed = updateSupplierSchema.safeParse(body);
 		if (!parsed.success) {
 			return new Response(
-				JSON.stringify({ error: "Validation failed", details: parsed.error.flatten() }),
+				JSON.stringify({
+					error: "Validation failed",
+					details: parsed.error.flatten(),
+				}),
 				{ status: 422, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
 		const id = Number(params.id);
 		if (Number.isNaN(id)) {
-			return new Response(
-				JSON.stringify({ error: "Invalid ID" }),
-				{ status: 400, headers: { "Content-Type": "application/json" } },
-			);
+			return new Response(JSON.stringify({ error: "Invalid ID" }), {
+				status: 400,
+				headers: { "Content-Type": "application/json" },
+			});
 		}
 
 		const existing = await db
@@ -165,10 +174,10 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 			.limit(1);
 
 		if (existing.length === 0) {
-			return new Response(
-				JSON.stringify({ error: "Supplier not found" }),
-				{ status: 404, headers: { "Content-Type": "application/json" } },
-			);
+			return new Response(JSON.stringify({ error: "Supplier not found" }), {
+				status: 404,
+				headers: { "Content-Type": "application/json" },
+			});
 		}
 
 		const { name, notes } = parsed.data;
@@ -212,10 +221,10 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 
 		const id = Number(params.id);
 		if (Number.isNaN(id)) {
-			return new Response(
-				JSON.stringify({ error: "Invalid ID" }),
-				{ status: 400, headers: { "Content-Type": "application/json" } },
-			);
+			return new Response(JSON.stringify({ error: "Invalid ID" }), {
+				status: 400,
+				headers: { "Content-Type": "application/json" },
+			});
 		}
 
 		const existing = await db
@@ -225,10 +234,10 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 			.limit(1);
 
 		if (existing.length === 0) {
-			return new Response(
-				JSON.stringify({ error: "Supplier not found" }),
-				{ status: 404, headers: { "Content-Type": "application/json" } },
-			);
+			return new Response(JSON.stringify({ error: "Supplier not found" }), {
+				status: 404,
+				headers: { "Content-Type": "application/json" },
+			});
 		}
 
 		await db
