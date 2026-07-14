@@ -2,6 +2,7 @@ import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
 import { auth } from "./auth";
 import { supplierRoutes } from "./routes/suppliers";
+import { towerRoutes } from "./routes/towers";
 
 const ALLOWED_ORIGINS = [
 	process.env.FRONTEND_URL,
@@ -20,6 +21,7 @@ const app = new Elysia()
 	)
 	.mount(auth.handler)
 	.use(supplierRoutes)
+	.use(towerRoutes)
 	.get("/api/health", () => ({
 		status: "ok",
 		timestamp: new Date().toISOString(),

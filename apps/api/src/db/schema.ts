@@ -111,3 +111,31 @@ export const supplierRelations = relations(suppliers, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
+
+export const towers = sqliteTable("towers", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	name: text("name").notNull().unique(),
+	notes: text("notes"),
+	isActive: integer("is_active", { mode: "boolean" }).default(true).notNull(),
+	createdBy: text("created_by")
+		.notNull()
+		.references(() => user.id),
+	createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+	updatedBy: text("updated_by")
+		.notNull()
+		.references(() => user.id),
+	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+		.$onUpdate(() => new Date())
+		.notNull(),
+});
+
+export const towerRelations = relations(towers, ({ one }) => ({
+	createdByUser: one(user, {
+		fields: [towers.createdBy],
+		references: [user.id],
+	}),
+	updatedByUser: one(user, {
+		fields: [towers.updatedBy],
+		references: [user.id],
+	}),
+}));

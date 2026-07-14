@@ -106,6 +106,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 								<span>Suppliers</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton render={<a href="/towers" />}>
+								<Building2Icon />
+								<span>Towers</span>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
 					</SidebarMenu>
 				</SidebarGroup>
 				<NavProjects projects={data.projects} />
