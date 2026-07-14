@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Dialog,
 	DialogContent,
@@ -13,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Textarea } from "@/components/ui/textarea";
 import { eden } from "@/lib/api";
 
@@ -191,23 +191,39 @@ export function CostTypeFormDialog({
 						/>
 					</div>
 
-					<div className="flex gap-6">
-						{/* biome-ignore lint/a11y/noLabelWithoutControl: label wraps checkbox */}
-						<label className="flex items-center gap-2 text-sm">
-							<Checkbox
-								checked={isFixed}
-								onCheckedChange={(checked) => setIsFixed(checked === true)}
-							/>
-							Fixed (unchanging amount)
-						</label>
-						{/* biome-ignore lint/a11y/noLabelWithoutControl: label wraps checkbox */}
-						<label className="flex items-center gap-2 text-sm">
-							<Checkbox
-								checked={isCapex}
-								onCheckedChange={(checked) => setIsCapex(checked === true)}
-							/>
-							Capital expenditure
-						</label>
+					<div className="grid grid-cols-2 gap-4">
+						<div className="space-y-2">
+							<Label>Type</Label>
+							<RadioGroup
+								value={isFixed ? "fixed" : "variable"}
+								onValueChange={(value) => setIsFixed(value === "fixed")}
+							>
+								<div className="flex items-center gap-2">
+									<RadioGroupItem value="fixed" id="fixed" />
+									<Label htmlFor="fixed">Fixed</Label>
+								</div>
+								<div className="flex items-center gap-2">
+									<RadioGroupItem value="variable" id="variable" />
+									<Label htmlFor="variable">Variable</Label>
+								</div>
+							</RadioGroup>
+						</div>
+						<div className="space-y-2">
+							<Label>Category</Label>
+							<RadioGroup
+								value={isCapex ? "capex" : "opex"}
+								onValueChange={(value) => setIsCapex(value === "capex")}
+							>
+								<div className="flex items-center gap-2">
+									<RadioGroupItem value="capex" id="capex" />
+									<Label htmlFor="capex">Capex</Label>
+								</div>
+								<div className="flex items-center gap-2">
+									<RadioGroupItem value="opex" id="opex" />
+									<Label htmlFor="opex">Opex</Label>
+								</div>
+							</RadioGroup>
+						</div>
 					</div>
 
 					<DialogFooter>
