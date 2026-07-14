@@ -7,7 +7,7 @@
 		"dev": "vite",
 		"build": "tsc && vite build",
 		"preview": "vite preview",
-		"typecheck": "tsc --noEmit --project tsconfig.json"
+		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@base-ui/react": "^1.6.0",

@@ -14,8 +14,8 @@
 	"lint-staged": {
 		"*.{ts,tsx}": [
 			"bun x biome check --write",
-			"bun run --filter web typecheck",
-			"bun run --filter api typecheck"
+			"bash -c 'bun run --filter web typecheck'",
+			"bash -c 'bun run --filter api typecheck'"
 		]
 	},
 	"dependencies": {
