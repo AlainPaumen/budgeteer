@@ -1,6 +1,7 @@
 import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
 import { auth } from "./auth";
+import { categoryRoutes } from "./routes/categories";
 import { costTypeRoutes } from "./routes/cost-types";
 import { serviceRoutes } from "./routes/services";
 import { supplierRoutes } from "./routes/suppliers";
@@ -24,6 +25,7 @@ const app = new Elysia()
 	.use(supplierRoutes)
 	.use(serviceRoutes)
 	.use(costTypeRoutes)
+	.use(categoryRoutes)
 	.get("/api/health", () => ({
 		status: "ok",
 		timestamp: new Date().toISOString(),

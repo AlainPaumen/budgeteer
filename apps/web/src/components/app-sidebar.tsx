@@ -1,6 +1,6 @@
 import {
 	Building2Icon,
-	FolderTreeIcon,
+	FoldersIcon,
 	FrameIcon,
 	LifeBuoyIcon,
 	MapIcon,
@@ -116,8 +116,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 						</SidebarMenuItem>
 						<SidebarMenuItem>
 							<SidebarMenuButton render={<a href="/cost-types" />}>
-								<FolderTreeIcon />
+								<FoldersIcon />
 								<span>Cost Types</span>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton render={<a href="/categories" />}>
+								<FoldersIcon />
+								<span>Categories</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 					</SidebarMenu>
