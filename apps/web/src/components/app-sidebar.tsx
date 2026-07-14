@@ -1,210 +1,124 @@
-import * as React from "react"
-
-import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
-import { NavSecondary } from "@/components/nav-secondary"
-import { NavUser } from "@/components/nav-user"
 import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-} from "@/components/ui/sidebar"
-import { authClient } from "@/lib/auth-client"
-import { TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, LifeBuoyIcon, SendIcon, FrameIcon, PieChartIcon, MapIcon, TerminalIcon } from "lucide-react"
+	BookOpenIcon,
+	BotIcon,
+	Building2Icon,
+	FrameIcon,
+	LifeBuoyIcon,
+	MapIcon,
+	PieChartIcon,
+	SendIcon,
+	Settings2Icon,
+	TerminalIcon,
+	TerminalSquareIcon,
+} from "lucide-react";
+import type * as React from "react";
+import { NavMain } from "@/components/nav-main";
+import { NavProjects } from "@/components/nav-projects";
+import { NavSecondary } from "@/components/nav-secondary";
+import { NavUser } from "@/components/nav-user";
+import {
+	Sidebar,
+	SidebarContent,
+	SidebarFooter,
+	SidebarGroup,
+	SidebarGroupLabel,
+	SidebarHeader,
+	SidebarMenu,
+	SidebarMenuButton,
+	SidebarMenuItem,
+} from "@/components/ui/sidebar";
+import { authClient } from "@/lib/auth-client";
 
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Playground",
-      url: "#",
-      icon: (
-        <TerminalSquareIcon
-        />
-      ),
-      isActive: true,
-      items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Models",
-      url: "#",
-      icon: (
-        <BotIcon
-        />
-      ),
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: (
-        <BookOpenIcon
-        />
-      ),
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: (
-        <Settings2Icon
-        />
-      ),
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Support",
-      url: "#",
-      icon: (
-        <LifeBuoyIcon
-        />
-      ),
-    },
-    {
-      title: "Feedback",
-      url: "#",
-      icon: (
-        <SendIcon
-        />
-      ),
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: (
-        <FrameIcon
-        />
-      ),
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: (
-        <PieChartIcon
-        />
-      ),
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: (
-        <MapIcon
-        />
-      ),
-    },
-  ],
-}
+	user: {
+		name: "shadcn",
+		email: "m@example.com",
+		avatar: "/avatars/shadcn.jpg",
+	},
+	navMain: [
+		{
+			title: "Suppliers",
+			url: "/suppliers",
+			icon: <Building2Icon />,
+		},
+	],
+	navSecondary: [
+		{
+			title: "Support",
+			url: "#",
+			icon: <LifeBuoyIcon />,
+		},
+		{
+			title: "Feedback",
+			url: "#",
+			icon: <SendIcon />,
+		},
+	],
+	projects: [
+		{
+			name: "Design Engineering",
+			url: "#",
+			icon: <FrameIcon />,
+		},
+		{
+			name: "Sales & Marketing",
+			url: "#",
+			icon: <PieChartIcon />,
+		},
+		{
+			name: "Travel",
+			url: "#",
+			icon: <MapIcon />,
+		},
+	],
+};
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { data: session } = authClient.useSession()
+	const { data: session } = authClient.useSession();
 
-  const user = session?.user
-    ? {
-        name: session.user.name || "User",
-        email: session.user.email || "",
-        avatar: session.user.image || "",
-      }
-    : data.user
+	const user = session?.user
+		? {
+				name: session.user.name || "User",
+				email: session.user.email || "",
+				avatar: session.user.image || "",
+			}
+		: data.user;
 
-  return (
-    <Sidebar
-      {...props}
-    >
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            {/* biome-ignore lint/a11y/useValidAnchor: placeholder link */}
-            <SidebarMenuButton size="lg" render={<a href="#" />}>
-              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                <TerminalIcon className="size-4" />
-              </div>
-              <div className="grid flex-1 text-left text-sm leading-tight">
-                <span className="truncate font-medium">Acme Inc</span>
-                <span className="truncate text-xs">Enterprise</span>
-              </div>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
-      </SidebarContent>
-      <SidebarFooter>
-        <NavUser user={user} />
-      </SidebarFooter>
-    </Sidebar>
-  )
+	return (
+		<Sidebar {...props}>
+			<SidebarHeader>
+				<SidebarMenu>
+					<SidebarMenuItem>
+						{/* biome-ignore lint/a11y/useValidAnchor: placeholder link */}
+						<SidebarMenuButton size="lg" render={<a href="#" />}>
+							<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+								<TerminalIcon className="size-4" />
+							</div>
+							<div className="grid flex-1 text-left text-sm leading-tight">
+								<span className="truncate font-medium">Acme Inc</span>
+								<span className="truncate text-xs">Enterprise</span>
+							</div>
+						</SidebarMenuButton>
+					</SidebarMenuItem>
+				</SidebarMenu>
+			</SidebarHeader>
+			<SidebarContent>
+				<SidebarGroup>
+					<SidebarGroupLabel>Budget</SidebarGroupLabel>
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton render={<a href="/suppliers" />}>
+								<Building2Icon />
+								<span>Suppliers</span>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarGroup>
+				<NavProjects projects={data.projects} />
+				<NavSecondary items={data.navSecondary} className="mt-auto" />
+			</SidebarContent>
+			<SidebarFooter>
+				<NavUser user={user} />
+			</SidebarFooter>
+		</Sidebar>
+	);
 }
