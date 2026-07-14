@@ -16,7 +16,8 @@
 			"bun x biome check --write",
 			"bash -c 'bun run --filter web typecheck'",
 			"bash -c 'bun run --filter api typecheck'"
-		]
+		],
+		"apps/web/src/routeTree.gen.ts": []
 	},
 	"dependencies": {
 		"@better-auth/drizzle-adapter": "^1.6.23",

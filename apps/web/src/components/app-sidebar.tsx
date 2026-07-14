@@ -6,6 +6,7 @@ import {
 	PieChartIcon,
 	SendIcon,
 	TerminalIcon,
+	WrenchIcon,
 } from "lucide-react";
 import type * as React from "react";
 import { NavProjects } from "@/components/nav-projects";
@@ -107,9 +108,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 						<SidebarMenuItem>
-							<SidebarMenuButton render={<a href="/towers" />}>
-								<Building2Icon />
-								<span>Towers</span>
+							<SidebarMenuButton render={<a href="/services" />}>
+								<WrenchIcon />
+								<span>Services</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 					</SidebarMenu>

@@ -14,6 +14,8 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated.index'
 import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as AuthLoginRouteImport } from './routes/auth.login'
+import { Route as AuthenticatedSuppliersRouteImport } from './routes/_authenticated.suppliers'
+import { Route as AuthenticatedServicesRouteImport } from './routes/_authenticated.services'
 
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
@@ -39,15 +41,29 @@ const AuthLoginRoute = AuthLoginRouteImport.update({
   path: '/login',
   getParentRoute: () => AuthRoute,
 } as any)
+const AuthenticatedSuppliersRoute = AuthenticatedSuppliersRouteImport.update({
+  id: '/suppliers',
+  path: '/suppliers',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedServicesRoute = AuthenticatedServicesRouteImport.update({
+  id: '/services',
+  path: '/services',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth': typeof AuthRouteWithChildren
+  '/services': typeof AuthenticatedServicesRoute
+  '/suppliers': typeof AuthenticatedSuppliersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
+  '/services': typeof AuthenticatedServicesRoute
+  '/suppliers': typeof AuthenticatedSuppliersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
   '/': typeof AuthenticatedIndexRoute
@@ -56,19 +72,25 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
+  '/_authenticated/services': typeof AuthenticatedServicesRoute
+  '/_authenticated/suppliers': typeof AuthenticatedSuppliersRoute
   '/auth/login': typeof AuthLoginRoute
   '/auth/signup': typeof AuthSignupRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/auth/login' | '/auth/signup'
+  fullPaths:
+    '/' | '/auth' | '/services' | '/suppliers' | '/auth/login' | '/auth/signup'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth' | '/auth/login' | '/auth/signup' | '/'
+  to:
+    '/auth' | '/services' | '/suppliers' | '/auth/login' | '/auth/signup' | '/'
   id:
     | '__root__'
     | '/_authenticated'
     | '/auth'
+    | '/_authenticated/services'
+    | '/_authenticated/suppliers'
     | '/auth/login'
     | '/auth/signup'
     | '/_authenticated/'
@@ -116,14 +138,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthLoginRouteImport
       parentRoute: typeof AuthRoute
     }
+    '/_authenticated/suppliers': {
+      id: '/_authenticated/suppliers'
+      path: '/suppliers'
+      fullPath: '/suppliers'
+      preLoaderRoute: typeof AuthenticatedSuppliersRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/services': {
+      id: '/_authenticated/services'
+      path: '/services'
+      fullPath: '/services'
+      preLoaderRoute: typeof AuthenticatedServicesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedServicesRoute: typeof AuthenticatedServicesRoute
+  AuthenticatedSuppliersRoute: typeof AuthenticatedSuppliersRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedServicesRoute: AuthenticatedServicesRoute,
+  AuthenticatedSuppliersRoute: AuthenticatedSuppliersRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
 }
 

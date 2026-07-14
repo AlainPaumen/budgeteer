@@ -5,6 +5,7 @@ import {
 	ArrowUpAZ,
 	PencilIcon,
 	PlusIcon,
+	RotateCcwIcon,
 	SearchIcon,
 	Trash2Icon,
 } from "lucide-react";
@@ -191,7 +192,11 @@ function SuppliersPage() {
 													setDeleteOpen(true);
 												}}
 											>
-												<Trash2Icon className="size-4" />
+												{supplier.isActive ? (
+													<Trash2Icon className="size-4" />
+												) : (
+													<RotateCcwIcon className="size-4" />
+												)}
 											</Button>
 										</div>
 									</TableCell>
@@ -241,6 +246,7 @@ function SuppliersPage() {
 					onOpenChange={setDeleteOpen}
 					supplierId={deletingSupplier.id}
 					supplierName={deletingSupplier.name}
+					isActive={deletingSupplier.isActive}
 				/>
 			)}
 		</div>

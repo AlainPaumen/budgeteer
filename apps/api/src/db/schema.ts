@@ -112,7 +112,7 @@ export const supplierRelations = relations(suppliers, ({ one }) => ({
 	}),
 }));
 
-export const towers = sqliteTable("towers", {
+export const services = sqliteTable("services", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
 	name: text("name").notNull().unique(),
 	notes: text("notes"),
@@ -129,13 +129,13 @@ export const towers = sqliteTable("towers", {
 		.notNull(),
 });
 
-export const towerRelations = relations(towers, ({ one }) => ({
+export const serviceRelations = relations(services, ({ one }) => ({
 	createdByUser: one(user, {
-		fields: [towers.createdBy],
+		fields: [services.createdBy],
 		references: [user.id],
 	}),
 	updatedByUser: one(user, {
-		fields: [towers.updatedBy],
+		fields: [services.updatedBy],
 		references: [user.id],
 	}),
 }));

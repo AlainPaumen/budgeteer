@@ -3,16 +3,17 @@ import { Elysia } from "elysia";
 import { z } from "zod";
 import { auth } from "../auth";
 import { db } from "../db";
-import { towers } from "../db/schema";
+import { services } from "../db/schema";
 
-const createTowerSchema = z.object({
+const createServiceSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
-	notes: z.string().max(1000).optional(),
+	notes: z.string().max(1000).nullable().optional(),
 });
 
-const updateTowerSchema = z.object({
+const updateServiceSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255).optional(),
-	notes: z.string().max(1000).optional(),
+	notes: z.string().max(1000).nullable().optional(),
+	is_active: z.coerce.boolean().optional(),
 });
 
 const listQuerySchema = z.object({
@@ -31,7 +32,7 @@ async function getSessionUserId(request: Request): Promise<string | null> {
 	return session?.user?.id ?? null;
 }
 
-export const towerRoutes = new Elysia({ prefix: "/api/towers" })
+export const serviceRoutes = new Elysia({ prefix: "/api/services" })
 	.get("/", async ({ request, query }) => {
 		const userId = await getSessionUserId(request);
 		if (!userId) {
@@ -57,10 +58,10 @@ export const towerRoutes = new Elysia({ prefix: "/api/towers" })
 
 		const conditions = [];
 		if (is_active !== undefined) {
-			conditions.push(eq(towers.isActive, is_active));
+			conditions.push(eq(services.isActive, is_active));
 		}
 		if (search) {
-			conditions.push(like(towers.name, `%${search}%`));
+			conditions.push(like(services.name, `%${search}%`));
 		}
 
 		const where = and(...conditions);
@@ -69,12 +70,12 @@ export const towerRoutes = new Elysia({ prefix: "/api/towers" })
 		const [data, totalResult] = await Promise.all([
 			db
 				.select()
-				.from(towers)
+				.from(services)
 				.where(where)
-				.orderBy(orderFn(towers[sort]))
+				.orderBy(orderFn(services[sort]))
 				.limit(limit)
 				.offset(offset),
-			db.select({ value: count() }).from(towers).where(where),
+			db.select({ value: count() }).from(services).where(where),
 		]);
 
 		const total = totalResult[0]?.value ?? 0;
@@ -98,7 +99,7 @@ export const towerRoutes = new Elysia({ prefix: "/api/towers" })
 			});
 		}
 
-		const parsed = createTowerSchema.safeParse(body);
+		const parsed = createServiceSchema.safeParse(body);
 		if (!parsed.success) {
 			return new Response(
 				JSON.stringify({
@@ -112,21 +113,21 @@ export const towerRoutes = new Elysia({ prefix: "/api/towers" })
 		const { name, notes } = parsed.data;
 
 		const existing = await db
-			.select({ id: towers.id })
-			.from(towers)
-			.where(and(eq(towers.name, name), eq(towers.isActive, true)))
+			.select({ id: services.id })
+			.from(services)
+			.where(and(eq(services.name, name), eq(services.isActive, true)))
 			.limit(1);
 
 		if (existing.length > 0) {
 			return new Response(
-				JSON.stringify({ error: "A tower with this name already exists" }),
+				JSON.stringify({ error: "A service with this name already exists" }),
 				{ status: 409, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
 		const now = new Date();
 		const [created] = await db
-			.insert(towers)
+			.insert(services)
 			.values({
 				name,
 				notes: notes ?? null,
@@ -148,7 +149,7 @@ export const towerRoutes = new Elysia({ prefix: "/api/towers" })
 			});
 		}
 
-		const parsed = updateTowerSchema.safeParse(body);
+		const parsed = updateServiceSchema.safeParse(body);
 		if (!parsed.success) {
 			return new Response(
 				JSON.stringify({
@@ -169,43 +170,44 @@ export const towerRoutes = new Elysia({ prefix: "/api/towers" })
 
 		const existing = await db
 			.select()
-			.from(towers)
-			.where(and(eq(towers.id, id), eq(towers.isActive, true)))
+			.from(services)
+			.where(eq(services.id, id))
 			.limit(1);
 
 		if (existing.length === 0) {
-			return new Response(JSON.stringify({ error: "Tower not found" }), {
+			return new Response(JSON.stringify({ error: "Service not found" }), {
 				status: 404,
 				headers: { "Content-Type": "application/json" },
 			});
 		}
 
-		const { name, notes } = parsed.data;
+		const { name, notes, is_active } = parsed.data;
 
 		if (name && name !== existing[0].name) {
 			const nameTaken = await db
-				.select({ id: towers.id })
-				.from(towers)
-				.where(and(eq(towers.name, name), eq(towers.isActive, true)))
+				.select({ id: services.id })
+				.from(services)
+				.where(and(eq(services.name, name), eq(services.isActive, true)))
 				.limit(1);
 
 			if (nameTaken.length > 0) {
 				return new Response(
-					JSON.stringify({ error: "A tower with this name already exists" }),
+					JSON.stringify({ error: "A service with this name already exists" }),
 					{ status: 409, headers: { "Content-Type": "application/json" } },
 				);
 			}
 		}
 
 		const [updated] = await db
-			.update(towers)
+			.update(services)
 			.set({
 				...(name !== undefined && { name }),
 				...(notes !== undefined && { notes: notes ?? null }),
+				...(is_active !== undefined && { isActive: is_active }),
 				updatedBy: userId,
 				updatedAt: new Date(),
 			})
-			.where(eq(towers.id, id))
+			.where(eq(services.id, id))
 			.returning();
 
 		return updated;
@@ -229,25 +231,25 @@ export const towerRoutes = new Elysia({ prefix: "/api/towers" })
 
 		const existing = await db
 			.select()
-			.from(towers)
-			.where(and(eq(towers.id, id), eq(towers.isActive, true)))
+			.from(services)
+			.where(and(eq(services.id, id), eq(services.isActive, true)))
 			.limit(1);
 
 		if (existing.length === 0) {
-			return new Response(JSON.stringify({ error: "Tower not found" }), {
+			return new Response(JSON.stringify({ error: "Service not found" }), {
 				status: 404,
 				headers: { "Content-Type": "application/json" },
 			});
 		}
 
 		await db
-			.update(towers)
+			.update(services)
 			.set({
 				isActive: false,
 				updatedBy: userId,
 				updatedAt: new Date(),
 			})
-			.where(eq(towers.id, id));
+			.where(eq(services.id, id));
 
 		return { success: true };
 	});

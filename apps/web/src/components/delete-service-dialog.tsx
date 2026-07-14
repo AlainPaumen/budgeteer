@@ -11,38 +11,38 @@ import {
 } from "@/components/ui/alert-dialog";
 import { eden } from "@/lib/api";
 
-interface DeleteSupplierDialogProps {
+interface DeleteServiceDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	supplierId: number;
-	supplierName: string;
+	serviceId: number;
+	serviceName: string;
 	isActive: boolean;
 }
 
-export function DeleteSupplierDialog({
+export function DeleteServiceDialog({
 	open,
 	onOpenChange,
-	supplierId,
-	supplierName,
+	serviceId,
+	serviceName,
 	isActive,
-}: DeleteSupplierDialogProps) {
+}: DeleteServiceDialogProps) {
 	const queryClient = useQueryClient();
 
 	const deleteMutation = useMutation({
 		mutationFn: async () => {
 			if (isActive) {
-				const res = await eden.api.suppliers({ id: supplierId }).delete();
+				const res = await eden.api.services({ id: serviceId }).delete();
 				if (res.error) throw res.error;
 				return res.data;
 			}
 			const res = await eden.api
-				.suppliers({ id: supplierId })
+				.services({ id: serviceId })
 				.patch({ is_active: true });
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["suppliers"] });
+			queryClient.invalidateQueries({ queryKey: ["services"] });
 			onOpenChange(false);
 		},
 	});
@@ -52,24 +52,24 @@ export function DeleteSupplierDialog({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{isActive ? "Delete Supplier" : "Undelete Supplier"}
+						{isActive ? "Delete Service" : "Undelete Service"}
 					</AlertDialogTitle>
 					<AlertDialogDescription>
 						{isActive ? (
 							<>
 								Are you sure you want to delete{" "}
 								<span className="font-medium text-foreground">
-									{supplierName}
+									{serviceName}
 								</span>
-								? This will deactivate the supplier but preserve its history.
+								? This will deactivate the service but preserve its history.
 							</>
 						) : (
 							<>
 								Are you sure you want to restore{" "}
 								<span className="font-medium text-foreground">
-									{supplierName}
+									{serviceName}
 								</span>
-								? This will reactivate the supplier.
+								? This will reactivate the service.
 							</>
 						)}
 					</AlertDialogDescription>

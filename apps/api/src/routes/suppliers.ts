@@ -7,12 +7,13 @@ import { suppliers } from "../db/schema";
 
 const createSupplierSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
-	notes: z.string().max(1000).optional(),
+	notes: z.string().max(1000).nullable().optional(),
 });
 
 const updateSupplierSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255).optional(),
-	notes: z.string().max(1000).optional(),
+	notes: z.string().max(1000).nullable().optional(),
+	is_active: z.coerce.boolean().optional(),
 });
 
 const listQuerySchema = z.object({
@@ -170,7 +171,7 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 		const existing = await db
 			.select()
 			.from(suppliers)
-			.where(and(eq(suppliers.id, id), eq(suppliers.isActive, true)))
+			.where(eq(suppliers.id, id))
 			.limit(1);
 
 		if (existing.length === 0) {
@@ -180,7 +181,7 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 			});
 		}
 
-		const { name, notes } = parsed.data;
+		const { name, notes, is_active } = parsed.data;
 
 		if (name && name !== existing[0].name) {
 			const nameTaken = await db
@@ -202,6 +203,7 @@ export const supplierRoutes = new Elysia({ prefix: "/api/suppliers" })
 			.set({
 				...(name !== undefined && { name }),
 				...(notes !== undefined && { notes: notes ?? null }),
+				...(is_active !== undefined && { isActive: is_active }),
 				updatedBy: userId,
 				updatedAt: new Date(),
 			})

@@ -15,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { eden } from "@/lib/api";
 
-interface Tower {
+interface Service {
 	id: number;
 	name: string;
 	notes: string | null;
@@ -26,53 +26,53 @@ interface Tower {
 	updatedAt: number;
 }
 
-interface TowerFormDialogProps {
+interface ServiceFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	tower?: Tower | null;
+	service?: Service | null;
 }
 
-export function TowerFormDialog({
+export function ServiceFormDialog({
 	open,
 	onOpenChange,
-	tower,
-}: TowerFormDialogProps) {
+	service,
+}: ServiceFormDialogProps) {
 	const queryClient = useQueryClient();
-	const isEditing = !!tower;
+	const isEditing = !!service;
 
 	const createMutation = useMutation({
-		mutationFn: async (data: { name: string; notes?: string }) => {
-			const res = await eden.api.towers.post(data);
+		mutationFn: async (data: { name: string; notes?: string | null }) => {
+			const res = await eden.api.services.post(data);
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["towers"] });
+			queryClient.invalidateQueries({ queryKey: ["services"] });
 			onOpenChange(false);
 		},
 	});
 
 	const updateMutation = useMutation({
-		mutationFn: async (data: { name?: string; notes?: string }) => {
-			const res = await eden.api.towers({ id: tower?.id ?? 0 }).patch(data);
+		mutationFn: async (data: { name?: string; notes?: string | null }) => {
+			const res = await eden.api.services({ id: service?.id ?? 0 }).patch(data);
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["towers"] });
+			queryClient.invalidateQueries({ queryKey: ["services"] });
 			onOpenChange(false);
 		},
 	});
 
 	const form = useForm({
 		defaultValues: {
-			name: "",
-			notes: "",
+			name: service?.name ?? "",
+			notes: service?.notes ?? "",
 		},
 		onSubmit: async ({ value }) => {
 			const data = {
 				name: value.name,
-				notes: value.notes || undefined,
+				notes: value.notes || null,
 			};
 			if (isEditing) {
 				await updateMutation.mutateAsync(data);
@@ -82,16 +82,21 @@ export function TowerFormDialog({
 		},
 	});
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: only reset on dialog open
 	useEffect(() => {
 		if (open) {
-			form.reset({
-				name: tower?.name ?? "",
-				notes: tower?.notes ?? "",
-			});
 			createMutation.reset();
 			updateMutation.reset();
 		}
-	}, [open, tower, form.reset, createMutation.reset, updateMutation.reset]);
+	}, [open]);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: service?.id triggers re-populate
+	useEffect(() => {
+		if (open) {
+			form.setFieldValue("name", service?.name ?? "");
+			form.setFieldValue("notes", service?.notes ?? "");
+		}
+	}, [open, service?.id, form]);
 
 	const error = createMutation.error || updateMutation.error;
 
@@ -99,11 +104,13 @@ export function TowerFormDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>{isEditing ? "Edit Tower" : "Add Tower"}</DialogTitle>
+					<DialogTitle>
+						{isEditing ? "Edit Service" : "Add Service"}
+					</DialogTitle>
 					<DialogDescription>
 						{isEditing
-							? "Update the tower details below."
-							: "Enter the details for the new tower."}
+							? "Update the service details below."
+							: "Enter the details for the new service."}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -121,6 +128,7 @@ export function TowerFormDialog({
 				)}
 
 				<form
+					key={service?.id ?? "new"}
 					onSubmit={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
@@ -141,7 +149,7 @@ export function TowerFormDialog({
 								<Input
 									id={field.name}
 									name={field.name}
-									placeholder="e.g. Tower A"
+									placeholder="e.g. Plumbing Service"
 									value={field.state.value}
 									onBlur={field.handleBlur}
 									onChange={(e) => field.handleChange(e.target.value)}
@@ -196,7 +204,7 @@ export function TowerFormDialog({
 											: "Creating..."
 										: isEditing
 											? "Save Changes"
-											: "Create Tower"}
+											: "Create Service"}
 								</Button>
 							)}
 						/>

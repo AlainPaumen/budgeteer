@@ -5,12 +5,13 @@ import {
 	ArrowUpAZ,
 	PencilIcon,
 	PlusIcon,
+	RotateCcwIcon,
 	SearchIcon,
 	Trash2Icon,
 } from "lucide-react";
 import { useState } from "react";
-import { DeleteTowerDialog } from "@/components/delete-tower-dialog";
-import { TowerFormDialog } from "@/components/tower-form-dialog";
+import { DeleteServiceDialog } from "@/components/delete-service-dialog";
+import { ServiceFormDialog } from "@/components/service-form-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -24,11 +25,11 @@ import {
 } from "@/components/ui/table";
 import { eden } from "@/lib/api";
 
-export const Route = createFileRoute("/_authenticated/towers")({
-	component: TowersPage,
+export const Route = createFileRoute("/_authenticated/services")({
+	component: ServicesPage,
 });
 
-interface Tower {
+interface Service {
 	id: number;
 	name: string;
 	notes: string | null;
@@ -39,8 +40,8 @@ interface Tower {
 	updatedAt: number;
 }
 
-interface TowersResponse {
-	data: Tower[];
+interface ServicesResponse {
+	data: Service[];
 	pagination: {
 		page: number;
 		limit: number;
@@ -49,16 +50,16 @@ interface TowersResponse {
 	};
 }
 
-function TowersPage() {
+function ServicesPage() {
 	const [page, setPage] = useState(1);
 	const [search, setSearch] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState("");
 	const [order, setOrder] = useState<"asc" | "desc">("asc");
 	const [showInactive, setShowInactive] = useState(false);
 	const [formOpen, setFormOpen] = useState(false);
-	const [editingTower, setEditingTower] = useState<Tower | null>(null);
+	const [editingService, setEditingService] = useState<Service | null>(null);
 	const [deleteOpen, setDeleteOpen] = useState(false);
-	const [deletingTower, setDeletingTower] = useState<Tower | null>(null);
+	const [deletingService, setDeletingService] = useState<Service | null>(null);
 
 	const handleSearchChange = (value: string) => {
 		setSearch(value);
@@ -68,7 +69,7 @@ function TowersPage() {
 
 	const { data, isLoading } = useQuery({
 		queryKey: [
-			"towers",
+			"services",
 			{ page, search: debouncedSearch, order, showInactive },
 		],
 		queryFn: async () => {
@@ -80,27 +81,27 @@ function TowersPage() {
 			};
 			if (!showInactive) params.is_active = "true";
 			if (debouncedSearch) params.search = debouncedSearch;
-			const res = await eden.api.towers.get({ query: params });
+			const res = await eden.api.services.get({ query: params });
 			if (res.error) throw res.error;
-			return res.data as unknown as TowersResponse;
+			return res.data as unknown as ServicesResponse;
 		},
 	});
 
-	const towers = data?.data ?? [];
+	const services = data?.data ?? [];
 	const pagination = data?.pagination;
 
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
-				<h1 className="text-2xl font-bold">Towers</h1>
+				<h1 className="text-2xl font-bold">Services</h1>
 				<Button
 					onClick={() => {
-						setEditingTower(null);
+						setEditingService(null);
 						setFormOpen(true);
 					}}
 				>
 					<PlusIcon className="mr-2 size-4" />
-					Add Tower
+					Add Service
 				</Button>
 			</div>
 
@@ -108,7 +109,7 @@ function TowersPage() {
 				<div className="relative max-w-sm">
 					<SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
 					<Input
-						placeholder="Search towers..."
+						placeholder="Search services..."
 						className="pl-8"
 						value={search}
 						onChange={(e) => handleSearchChange(e.target.value)}
@@ -129,13 +130,13 @@ function TowersPage() {
 
 			{isLoading ? (
 				<div className="py-12 text-center text-sm text-muted-foreground">
-					Loading towers...
+					Loading services...
 				</div>
-			) : towers.length === 0 ? (
+			) : services.length === 0 ? (
 				<div className="py-12 text-center text-sm text-muted-foreground">
 					{debouncedSearch
-						? "No towers match your search."
-						: "No towers yet. Add your first tower to get started."}
+						? "No services match your search."
+						: "No services yet. Add your first service to get started."}
 				</div>
 			) : (
 				<>
@@ -163,11 +164,11 @@ function TowersPage() {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{towers.map((tower) => (
-								<TableRow key={tower.id}>
-									<TableCell className="font-medium">{tower.name}</TableCell>
+							{services.map((service) => (
+								<TableRow key={service.id}>
+									<TableCell className="font-medium">{service.name}</TableCell>
 									<TableCell className="text-muted-foreground">
-										{tower.notes || "—"}
+										{service.notes || "—"}
 									</TableCell>
 									<TableCell>
 										<div className="flex gap-1">
@@ -175,7 +176,7 @@ function TowersPage() {
 												variant="ghost"
 												size="icon-sm"
 												onClick={() => {
-													setEditingTower(tower);
+													setEditingService(service);
 													setFormOpen(true);
 												}}
 											>
@@ -185,11 +186,15 @@ function TowersPage() {
 												variant="ghost"
 												size="icon-sm"
 												onClick={() => {
-													setDeletingTower(tower);
+													setDeletingService(service);
 													setDeleteOpen(true);
 												}}
 											>
-												<Trash2Icon className="size-4" />
+												{service.isActive ? (
+													<Trash2Icon className="size-4" />
+												) : (
+													<RotateCcwIcon className="size-4" />
+												)}
 											</Button>
 										</div>
 									</TableCell>
@@ -227,18 +232,19 @@ function TowersPage() {
 				</>
 			)}
 
-			<TowerFormDialog
+			<ServiceFormDialog
 				open={formOpen}
 				onOpenChange={setFormOpen}
-				tower={editingTower}
+				service={editingService}
 			/>
 
-			{deletingTower && (
-				<DeleteTowerDialog
+			{deletingService && (
+				<DeleteServiceDialog
 					open={deleteOpen}
 					onOpenChange={setDeleteOpen}
-					towerId={deletingTower.id}
-					towerName={deletingTower.name}
+					serviceId={deletingService.id}
+					serviceName={deletingService.name}
+					isActive={deletingService.isActive}
 				/>
 			)}
 		</div>

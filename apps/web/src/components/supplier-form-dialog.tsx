@@ -41,7 +41,7 @@ export function SupplierFormDialog({
 	const isEditing = !!supplier;
 
 	const createMutation = useMutation({
-		mutationFn: async (data: { name: string; notes?: string }) => {
+		mutationFn: async (data: { name: string; notes?: string | null }) => {
 			const res = await eden.api.suppliers.post(data);
 			if (res.error) throw res.error;
 			return res.data;
@@ -53,7 +53,7 @@ export function SupplierFormDialog({
 	});
 
 	const updateMutation = useMutation({
-		mutationFn: async (data: { name?: string; notes?: string }) => {
+		mutationFn: async (data: { name?: string; notes?: string | null }) => {
 			const res = await eden.api
 				.suppliers({ id: supplier?.id ?? 0 })
 				.patch(data);
@@ -68,13 +68,13 @@ export function SupplierFormDialog({
 
 	const form = useForm({
 		defaultValues: {
-			name: "",
-			notes: "",
+			name: supplier?.name ?? "",
+			notes: supplier?.notes ?? "",
 		},
 		onSubmit: async ({ value }) => {
 			const data = {
 				name: value.name,
-				notes: value.notes || undefined,
+				notes: value.notes || null,
 			};
 			if (isEditing) {
 				await updateMutation.mutateAsync(data);
@@ -84,16 +84,21 @@ export function SupplierFormDialog({
 		},
 	});
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: only reset on dialog open
 	useEffect(() => {
 		if (open) {
-			form.reset({
-				name: supplier?.name ?? "",
-				notes: supplier?.notes ?? "",
-			});
 			createMutation.reset();
 			updateMutation.reset();
 		}
-	}, [open, supplier, form.reset, createMutation.reset, updateMutation.reset]);
+	}, [open]);
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: supplier?.id triggers re-populate
+	useEffect(() => {
+		if (open) {
+			form.setFieldValue("name", supplier?.name ?? "");
+			form.setFieldValue("notes", supplier?.notes ?? "");
+		}
+	}, [open, supplier?.id, form]);
 
 	const error = createMutation.error || updateMutation.error;
 
@@ -125,6 +130,7 @@ export function SupplierFormDialog({
 				)}
 
 				<form
+					key={supplier?.id ?? "new"}
 					onSubmit={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
