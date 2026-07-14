@@ -1,18 +1,13 @@
 import {
-	BookOpenIcon,
-	BotIcon,
 	Building2Icon,
 	FrameIcon,
 	LifeBuoyIcon,
 	MapIcon,
 	PieChartIcon,
 	SendIcon,
-	Settings2Icon,
 	TerminalIcon,
-	TerminalSquareIcon,
 } from "lucide-react";
 import type * as React from "react";
-import { NavMain } from "@/components/nav-main";
 import { NavProjects } from "@/components/nav-projects";
 import { NavSecondary } from "@/components/nav-secondary";
 import { NavUser } from "@/components/nav-user";
