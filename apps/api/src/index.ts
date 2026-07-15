@@ -1,6 +1,7 @@
 import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
 import { auth } from "./auth";
+import { branchRoutes } from "./routes/branches";
 import { categoryRoutes } from "./routes/categories";
 import { costTypeRoutes } from "./routes/cost-types";
 import { invoiceRoutes } from "./routes/invoices";
@@ -24,6 +25,7 @@ const app = new Elysia()
 	)
 	.mount(auth.handler)
 	.use(supplierRoutes)
+	.use(branchRoutes)
 	.use(serviceRoutes)
 	.use(costTypeRoutes)
 	.use(categoryRoutes)

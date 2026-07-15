@@ -64,6 +64,20 @@
       "when": 1784100000003,
       "tag": "0008_add_invoices",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1784100000004,
+      "tag": "0009_add_invoice_line_dates",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1784100000005,
+      "tag": "0010_add_branches",
+      "breakpoints": true
     }
   ]
 }
