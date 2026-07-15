@@ -16,14 +16,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { eden } from "@/lib/api";
 
-const locationSchema = z.object({
+const affiliateSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
 	notes: z.string().max(1000).nullable(),
 });
 
-type FormValues = z.infer<typeof locationSchema>;
+type FormValues = z.infer<typeof affiliateSchema>;
 
-interface Location {
+interface Affiliate {
 	id: number;
 	name: string;
 	notes: string | null;
@@ -34,33 +34,33 @@ interface Location {
 	updatedAt: number;
 }
 
-interface LocationFormDialogProps {
+interface AffiliateFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	location?: Location | null;
+	affiliate?: Affiliate | null;
 }
 
-export function LocationFormDialog({
+export function AffiliateFormDialog({
 	open,
 	onOpenChange,
-	location,
-}: LocationFormDialogProps) {
+	affiliate,
+}: AffiliateFormDialogProps) {
 	const queryClient = useQueryClient();
-	const isEditing = !!location;
+	const isEditing = !!affiliate;
 
 	const defaultValues: FormValues = {
-		name: location?.name ?? "",
-		notes: location?.notes ?? "",
+		name: affiliate?.name ?? "",
+		notes: affiliate?.notes ?? "",
 	};
 
 	const createMutation = useMutation({
 		mutationFn: async (data: { name: string; notes?: string | null }) => {
-			const res = await eden.api.locations.post(data);
+			const res = await eden.api.affiliates.post(data);
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["locations"] });
+			queryClient.invalidateQueries({ queryKey: ["affiliates"] });
 			onOpenChange(false);
 		},
 	});
@@ -68,13 +68,13 @@ export function LocationFormDialog({
 	const updateMutation = useMutation({
 		mutationFn: async (data: { name?: string; notes?: string | null }) => {
 			const res = await eden.api
-				.locations({ id: location?.id ?? 0 })
+				.affiliates({ id: affiliate?.id ?? 0 })
 				.patch(data);
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["locations"] });
+			queryClient.invalidateQueries({ queryKey: ["affiliates"] });
 			onOpenChange(false);
 		},
 	});
@@ -82,7 +82,7 @@ export function LocationFormDialog({
 	const form = useForm({
 		defaultValues,
 		validators: {
-			onSubmit: locationSchema,
+			onSubmit: affiliateSchema,
 		},
 		onSubmit: async ({ value }) => {
 			const data = {
@@ -105,13 +105,13 @@ export function LocationFormDialog({
 		}
 	}, [open]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: location?.id triggers re-populate
+	// biome-ignore lint/correctness/useExhaustiveDependencies: affiliate?.id triggers re-populate
 	useEffect(() => {
 		if (open) {
-			form.setFieldValue("name", location?.name ?? "");
-			form.setFieldValue("notes", location?.notes ?? "");
+			form.setFieldValue("name", affiliate?.name ?? "");
+			form.setFieldValue("notes", affiliate?.notes ?? "");
 		}
-	}, [open, location?.id, form]);
+	}, [open, affiliate?.id, form]);
 
 	const error = createMutation.error || updateMutation.error;
 
@@ -120,12 +120,12 @@ export function LocationFormDialog({
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>
-						{isEditing ? "Edit Location" : "Add Location"}
+						{isEditing ? "Edit Affiliate" : "Add Affiliate"}
 					</DialogTitle>
 					<DialogDescription>
 						{isEditing
-							? "Update the location details below."
-							: "Enter the details for the new location."}
+							? "Update the affiliate details below."
+							: "Enter the details for the new affiliate."}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -143,7 +143,7 @@ export function LocationFormDialog({
 				)}
 
 				<form
-					key={location?.id ?? "new"}
+					key={affiliate?.id ?? "new"}
 					onSubmit={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
@@ -166,7 +166,7 @@ export function LocationFormDialog({
 									<Input
 										id="name"
 										name="name"
-										placeholder="e.g. New York Office"
+										placeholder="e.g. Acme Corp"
 										value={field.state.value}
 										onBlur={field.handleBlur}
 										onChange={(e) => field.handleChange(e.target.value)}
@@ -222,7 +222,7 @@ export function LocationFormDialog({
 											: "Creating..."
 										: isEditing
 											? "Save Changes"
-											: "Create Location"}
+											: "Create Affiliate"}
 								</Button>
 							)}
 						/>

@@ -10,8 +10,8 @@ import {
 	Trash2Icon,
 } from "lucide-react";
 import { useState } from "react";
-import { DeleteLocationDialog } from "@/components/delete-location-dialog";
-import { LocationFormDialog } from "@/components/location-form-dialog";
+import { AffiliateFormDialog } from "@/components/affiliate-form-dialog";
+import { DeleteAffiliateDialog } from "@/components/delete-affiliate-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -25,11 +25,11 @@ import {
 } from "@/components/ui/table";
 import { eden } from "@/lib/api";
 
-export const Route = createFileRoute("/_authenticated/locations")({
-	component: LocationsPage,
+export const Route = createFileRoute("/_authenticated/affiliates")({
+	component: AffiliatesPage,
 });
 
-interface Location {
+interface Affiliate {
 	id: number;
 	name: string;
 	notes: string | null;
@@ -40,8 +40,8 @@ interface Location {
 	updatedAt: number;
 }
 
-interface LocationsResponse {
-	data: Location[];
+interface AffiliatesResponse {
+	data: Affiliate[];
 	pagination: {
 		page: number;
 		limit: number;
@@ -50,16 +50,18 @@ interface LocationsResponse {
 	};
 }
 
-function LocationsPage() {
+function AffiliatesPage() {
 	const [page, setPage] = useState(1);
 	const [search, setSearch] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState("");
 	const [order, setOrder] = useState<"asc" | "desc">("asc");
 	const [showInactive, setShowInactive] = useState(false);
 	const [formOpen, setFormOpen] = useState(false);
-	const [editingLocation, setEditingLocation] = useState<Location | null>(null);
+	const [editingAffiliate, setEditingAffiliate] = useState<Affiliate | null>(
+		null,
+	);
 	const [deleteOpen, setDeleteOpen] = useState(false);
-	const [deletingLocation, setDeletingLocation] = useState<Location | null>(
+	const [deletingAffiliate, setDeletingAffiliate] = useState<Affiliate | null>(
 		null,
 	);
 
@@ -71,7 +73,7 @@ function LocationsPage() {
 
 	const { data, isLoading } = useQuery({
 		queryKey: [
-			"locations",
+			"affiliates",
 			{ page, search: debouncedSearch, order, showInactive },
 		],
 		queryFn: async () => {
@@ -83,27 +85,27 @@ function LocationsPage() {
 			};
 			if (!showInactive) params.is_active = "true";
 			if (debouncedSearch) params.search = debouncedSearch;
-			const res = await eden.api.locations.get({ query: params });
+			const res = await eden.api.affiliates.get({ query: params });
 			if (res.error) throw res.error;
-			return res.data as unknown as LocationsResponse;
+			return res.data as unknown as AffiliatesResponse;
 		},
 	});
 
-	const locations = data?.data ?? [];
+	const affiliates = data?.data ?? [];
 	const pagination = data?.pagination;
 
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
-				<h1 className="text-2xl font-bold">Locations</h1>
+				<h1 className="text-2xl font-bold">Affiliates</h1>
 				<Button
 					onClick={() => {
-						setEditingLocation(null);
+						setEditingAffiliate(null);
 						setFormOpen(true);
 					}}
 				>
 					<PlusIcon className="mr-2 size-4" />
-					Add Location
+					Add Affiliate
 				</Button>
 			</div>
 
@@ -111,7 +113,7 @@ function LocationsPage() {
 				<div className="relative max-w-sm">
 					<SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
 					<Input
-						placeholder="Search locations..."
+						placeholder="Search affiliates..."
 						className="pl-8"
 						value={search}
 						onChange={(e) => handleSearchChange(e.target.value)}
@@ -132,13 +134,13 @@ function LocationsPage() {
 
 			{isLoading ? (
 				<div className="py-12 text-center text-sm text-muted-foreground">
-					Loading locations...
+					Loading affiliates...
 				</div>
-			) : locations.length === 0 ? (
+			) : affiliates.length === 0 ? (
 				<div className="py-12 text-center text-sm text-muted-foreground">
 					{debouncedSearch
-						? "No locations match your search."
-						: "No locations yet. Add your first location to get started."}
+						? "No affiliates match your search."
+						: "No affiliates yet. Add your first affiliate to get started."}
 				</div>
 			) : (
 				<>
@@ -166,11 +168,13 @@ function LocationsPage() {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{locations.map((location) => (
-								<TableRow key={location.id}>
-									<TableCell className="font-medium">{location.name}</TableCell>
+							{affiliates.map((affiliate) => (
+								<TableRow key={affiliate.id}>
+									<TableCell className="font-medium">
+										{affiliate.name}
+									</TableCell>
 									<TableCell className="text-muted-foreground">
-										{location.notes || "—"}
+										{affiliate.notes || "—"}
 									</TableCell>
 									<TableCell>
 										<div className="flex gap-1">
@@ -178,7 +182,7 @@ function LocationsPage() {
 												variant="ghost"
 												size="icon-sm"
 												onClick={() => {
-													setEditingLocation(location);
+													setEditingAffiliate(affiliate);
 													setFormOpen(true);
 												}}
 											>
@@ -188,11 +192,11 @@ function LocationsPage() {
 												variant="ghost"
 												size="icon-sm"
 												onClick={() => {
-													setDeletingLocation(location);
+													setDeletingAffiliate(affiliate);
 													setDeleteOpen(true);
 												}}
 											>
-												{location.isActive ? (
+												{affiliate.isActive ? (
 													<Trash2Icon className="size-4" />
 												) : (
 													<RotateCcwIcon className="size-4" />
@@ -234,19 +238,19 @@ function LocationsPage() {
 				</>
 			)}
 
-			<LocationFormDialog
+			<AffiliateFormDialog
 				open={formOpen}
 				onOpenChange={setFormOpen}
-				location={editingLocation}
+				affiliate={editingAffiliate}
 			/>
 
-			{deletingLocation && (
-				<DeleteLocationDialog
+			{deletingAffiliate && (
+				<DeleteAffiliateDialog
 					open={deleteOpen}
 					onOpenChange={setDeleteOpen}
-					locationId={deletingLocation.id}
-					locationName={deletingLocation.name}
-					isActive={deletingLocation.isActive}
+					affiliateId={deletingAffiliate.id}
+					affiliateName={deletingAffiliate.name}
+					isActive={deletingAffiliate.isActive}
 				/>
 			)}
 		</div>

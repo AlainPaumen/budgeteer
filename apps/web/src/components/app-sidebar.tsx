@@ -124,9 +124,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 						<SidebarMenuItem>
-							<SidebarMenuButton render={<a href="/locations" />}>
+							<SidebarMenuButton render={<a href="/affiliates" />}>
 								<MapPinIcon />
-								<span>Locations</span>
+								<span>Affiliates</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 						<SidebarMenuItem>

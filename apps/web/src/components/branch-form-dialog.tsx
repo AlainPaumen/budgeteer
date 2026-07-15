@@ -26,12 +26,12 @@ import { eden } from "@/lib/api";
 const branchSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
 	notes: z.string().max(1000).nullable(),
-	location_id: z.number().positive().nullable(),
+	affiliate_id: z.number().positive().nullable(),
 });
 
 type FormValues = z.infer<typeof branchSchema>;
 
-interface Location {
+interface Affiliate {
 	id: number;
 	name: string;
 }
@@ -40,7 +40,7 @@ interface Branch {
 	id: number;
 	name: string;
 	notes: string | null;
-	locationId: number | null;
+	affiliateId: number | null;
 	isActive: boolean;
 	createdBy: string;
 	createdAt: number;
@@ -62,28 +62,28 @@ export function BranchFormDialog({
 	const queryClient = useQueryClient();
 	const isEditing = !!branch;
 
-	const { data: locations = [] } = useQuery({
-		queryKey: ["locations"],
+	const { data: affiliates = [] } = useQuery({
+		queryKey: ["affiliates"],
 		queryFn: async () => {
-			const res = await eden.api.locations.get({
+			const res = await eden.api.affiliates.get({
 				query: { limit: "100", is_active: "true" },
 			});
 			if (res.error) throw res.error;
-			return (res.data as unknown as { data: Location[] }).data;
+			return (res.data as unknown as { data: Affiliate[] }).data;
 		},
 	});
 
 	const defaultValues: FormValues = {
 		name: branch?.name ?? "",
 		notes: branch?.notes ?? "",
-		location_id: branch?.locationId ?? null,
+		affiliate_id: branch?.affiliateId ?? null,
 	};
 
 	const createMutation = useMutation({
 		mutationFn: async (data: {
 			name: string;
 			notes?: string | null;
-			location_id?: number | null;
+			affiliate_id?: number | null;
 		}) => {
 			const res = await eden.api.branches.post(data);
 			if (res.error) throw res.error;
@@ -99,7 +99,7 @@ export function BranchFormDialog({
 		mutationFn: async (data: {
 			name?: string;
 			notes?: string | null;
-			location_id?: number | null;
+			affiliate_id?: number | null;
 		}) => {
 			const res = await eden.api.branches({ id: branch?.id ?? 0 }).patch(data);
 			if (res.error) throw res.error;
@@ -120,7 +120,7 @@ export function BranchFormDialog({
 			const data = {
 				name: value.name,
 				notes: value.notes || null,
-				location_id: value.location_id || null,
+				affiliate_id: value.affiliate_id || null,
 			};
 			if (isEditing) {
 				await updateMutation.mutateAsync(data);
@@ -143,7 +143,7 @@ export function BranchFormDialog({
 		if (open) {
 			form.setFieldValue("name", branch?.name ?? "");
 			form.setFieldValue("notes", branch?.notes ?? "");
-			form.setFieldValue("location_id", branch?.locationId ?? null);
+			form.setFieldValue("affiliate_id", branch?.affiliateId ?? null);
 		}
 	}, [open, branch?.id, form]);
 
@@ -211,28 +211,31 @@ export function BranchFormDialog({
 					/>
 
 					<form.Field
-						name="location_id"
+						name="affiliate_id"
 						// biome-ignore lint/correctness/noChildrenProp: TanStack Form render prop
 						children={(field) => (
 							<Field>
-								<FieldLabel htmlFor="location_id">Location</FieldLabel>
+								<FieldLabel htmlFor="affiliate_id">Affiliate</FieldLabel>
 								<Select
 									value={field.state.value ? String(field.state.value) : ""}
 									onValueChange={(value) => {
 										field.handleChange(value ? Number(value) : null);
 									}}
-									items={locations.map((l) => ({
-										value: String(l.id),
-										label: l.name,
+									items={affiliates.map((a) => ({
+										value: String(a.id),
+										label: a.name,
 									}))}
 								>
 									<SelectTrigger className="w-full">
-										<SelectValue placeholder="Select a location" />
+										<SelectValue placeholder="Select an affiliate" />
 									</SelectTrigger>
 									<SelectContent>
-										{locations.map((location) => (
-											<SelectItem key={location.id} value={String(location.id)}>
-												{location.name}
+										{affiliates.map((affiliate) => (
+											<SelectItem
+												key={affiliate.id}
+												value={String(affiliate.id)}
+											>
+												{affiliate.name}
 											</SelectItem>
 										))}
 									</SelectContent>

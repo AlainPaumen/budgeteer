@@ -3,14 +3,14 @@ import { Elysia } from "elysia";
 import { z } from "zod";
 import { auth } from "../auth";
 import { db } from "../db";
-import { locations } from "../db/schema";
+import { affiliates } from "../db/schema";
 
-const createLocationSchema = z.object({
+const createAffiliateSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
 	notes: z.string().max(1000).nullable().optional(),
 });
 
-const updateLocationSchema = z.object({
+const updateAffiliateSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255).optional(),
 	notes: z.string().max(1000).nullable().optional(),
 	is_active: z.coerce.boolean().optional(),
@@ -32,7 +32,7 @@ async function getSessionUserId(request: Request): Promise<string | null> {
 	return session?.user?.id ?? null;
 }
 
-export const locationRoutes = new Elysia({ prefix: "/api/locations" })
+export const affiliateRoutes = new Elysia({ prefix: "/api/affiliates" })
 	.get("/", async ({ request, query }) => {
 		const userId = await getSessionUserId(request);
 		if (!userId) {
@@ -58,10 +58,10 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 
 		const conditions = [];
 		if (is_active !== undefined) {
-			conditions.push(eq(locations.isActive, is_active));
+			conditions.push(eq(affiliates.isActive, is_active));
 		}
 		if (search) {
-			conditions.push(like(locations.name, `%${search}%`));
+			conditions.push(like(affiliates.name, `%${search}%`));
 		}
 
 		const where = and(...conditions);
@@ -70,12 +70,12 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 		const [data, totalResult] = await Promise.all([
 			db
 				.select()
-				.from(locations)
+				.from(affiliates)
 				.where(where)
-				.orderBy(orderFn(locations[sort]))
+				.orderBy(orderFn(affiliates[sort]))
 				.limit(limit)
 				.offset(offset),
-			db.select({ value: count() }).from(locations).where(where),
+			db.select({ value: count() }).from(affiliates).where(where),
 		]);
 
 		const total = totalResult[0]?.value ?? 0;
@@ -99,7 +99,7 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 			});
 		}
 
-		const parsed = createLocationSchema.safeParse(body);
+		const parsed = createAffiliateSchema.safeParse(body);
 		if (!parsed.success) {
 			return new Response(
 				JSON.stringify({
@@ -113,21 +113,21 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 		const { name, notes } = parsed.data;
 
 		const existing = await db
-			.select({ id: locations.id })
-			.from(locations)
-			.where(and(eq(locations.name, name), eq(locations.isActive, true)))
+			.select({ id: affiliates.id })
+			.from(affiliates)
+			.where(and(eq(affiliates.name, name), eq(affiliates.isActive, true)))
 			.limit(1);
 
 		if (existing.length > 0) {
 			return new Response(
-				JSON.stringify({ error: "A location with this name already exists" }),
+				JSON.stringify({ error: "An affiliate with this name already exists" }),
 				{ status: 409, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
 		const now = new Date();
 		const [created] = await db
-			.insert(locations)
+			.insert(affiliates)
 			.values({
 				name,
 				notes: notes ?? null,
@@ -149,7 +149,7 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 			});
 		}
 
-		const parsed = updateLocationSchema.safeParse(body);
+		const parsed = updateAffiliateSchema.safeParse(body);
 		if (!parsed.success) {
 			return new Response(
 				JSON.stringify({
@@ -170,12 +170,12 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 
 		const existing = await db
 			.select()
-			.from(locations)
-			.where(eq(locations.id, id))
+			.from(affiliates)
+			.where(eq(affiliates.id, id))
 			.limit(1);
 
 		if (existing.length === 0) {
-			return new Response(JSON.stringify({ error: "Location not found" }), {
+			return new Response(JSON.stringify({ error: "Affiliate not found" }), {
 				status: 404,
 				headers: { "Content-Type": "application/json" },
 			});
@@ -185,21 +185,23 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 
 		if (name && name !== existing[0].name) {
 			const nameTaken = await db
-				.select({ id: locations.id })
-				.from(locations)
-				.where(and(eq(locations.name, name), eq(locations.isActive, true)))
+				.select({ id: affiliates.id })
+				.from(affiliates)
+				.where(and(eq(affiliates.name, name), eq(affiliates.isActive, true)))
 				.limit(1);
 
 			if (nameTaken.length > 0) {
 				return new Response(
-					JSON.stringify({ error: "A location with this name already exists" }),
+					JSON.stringify({
+						error: "An affiliate with this name already exists",
+					}),
 					{ status: 409, headers: { "Content-Type": "application/json" } },
 				);
 			}
 		}
 
 		const [updated] = await db
-			.update(locations)
+			.update(affiliates)
 			.set({
 				...(name !== undefined && { name }),
 				...(notes !== undefined && { notes: notes ?? null }),
@@ -207,7 +209,7 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 				updatedBy: userId,
 				updatedAt: new Date(),
 			})
-			.where(eq(locations.id, id))
+			.where(eq(affiliates.id, id))
 			.returning();
 
 		return updated;
@@ -231,25 +233,25 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 
 		const existing = await db
 			.select()
-			.from(locations)
-			.where(and(eq(locations.id, id), eq(locations.isActive, true)))
+			.from(affiliates)
+			.where(and(eq(affiliates.id, id), eq(affiliates.isActive, true)))
 			.limit(1);
 
 		if (existing.length === 0) {
-			return new Response(JSON.stringify({ error: "Location not found" }), {
+			return new Response(JSON.stringify({ error: "Affiliate not found" }), {
 				status: 404,
 				headers: { "Content-Type": "application/json" },
 			});
 		}
 
 		await db
-			.update(locations)
+			.update(affiliates)
 			.set({
 				isActive: false,
 				updatedBy: userId,
 				updatedAt: new Date(),
 			})
-			.where(eq(locations.id, id));
+			.where(eq(affiliates.id, id));
 
 		return { success: true };
 	});

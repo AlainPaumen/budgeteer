@@ -11,38 +11,38 @@ import {
 } from "@/components/ui/alert-dialog";
 import { eden } from "@/lib/api";
 
-interface DeleteLocationDialogProps {
+interface DeleteAffiliateDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	locationId: number;
-	locationName: string;
+	affiliateId: number;
+	affiliateName: string;
 	isActive: boolean;
 }
 
-export function DeleteLocationDialog({
+export function DeleteAffiliateDialog({
 	open,
 	onOpenChange,
-	locationId,
-	locationName,
+	affiliateId,
+	affiliateName,
 	isActive,
-}: DeleteLocationDialogProps) {
+}: DeleteAffiliateDialogProps) {
 	const queryClient = useQueryClient();
 
 	const deleteMutation = useMutation({
 		mutationFn: async () => {
 			if (isActive) {
-				const res = await eden.api.locations({ id: locationId }).delete();
+				const res = await eden.api.affiliates({ id: affiliateId }).delete();
 				if (res.error) throw res.error;
 				return res.data;
 			}
 			const res = await eden.api
-				.locations({ id: locationId })
+				.affiliates({ id: affiliateId })
 				.patch({ is_active: true });
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["locations"] });
+			queryClient.invalidateQueries({ queryKey: ["affiliates"] });
 			onOpenChange(false);
 		},
 	});
@@ -52,24 +52,24 @@ export function DeleteLocationDialog({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{isActive ? "Delete Location" : "Undelete Location"}
+						{isActive ? "Delete Affiliate" : "Undelete Affiliate"}
 					</AlertDialogTitle>
 					<AlertDialogDescription>
 						{isActive ? (
 							<>
 								Are you sure you want to delete{" "}
 								<span className="font-medium text-foreground">
-									{locationName}
+									{affiliateName}
 								</span>
-								? This will deactivate the location but preserve its history.
+								? This will deactivate the affiliate but preserve its history.
 							</>
 						) : (
 							<>
 								Are you sure you want to restore{" "}
 								<span className="font-medium text-foreground">
-									{locationName}
+									{affiliateName}
 								</span>
-								? This will reactivate the location.
+								? This will reactivate the affiliate.
 							</>
 						)}
 					</AlertDialogDescription>
