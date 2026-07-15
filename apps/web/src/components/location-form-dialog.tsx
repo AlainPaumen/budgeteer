@@ -23,20 +23,20 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { eden } from "@/lib/api";
 
-const branchSchema = z.object({
+const locationSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
 	notes: z.string().max(1000).nullable(),
 	affiliate_id: z.number().positive().nullable(),
 });
 
-type FormValues = z.infer<typeof branchSchema>;
+type FormValues = z.infer<typeof locationSchema>;
 
 interface Affiliate {
 	id: number;
 	name: string;
 }
 
-interface Branch {
+interface Location {
 	id: number;
 	name: string;
 	notes: string | null;
@@ -48,19 +48,19 @@ interface Branch {
 	updatedAt: number;
 }
 
-interface BranchFormDialogProps {
+interface LocationFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	branch?: Branch | null;
+	location?: Location | null;
 }
 
-export function BranchFormDialog({
+export function LocationFormDialog({
 	open,
 	onOpenChange,
-	branch,
-}: BranchFormDialogProps) {
+	location,
+}: LocationFormDialogProps) {
 	const queryClient = useQueryClient();
-	const isEditing = !!branch;
+	const isEditing = !!location;
 
 	const { data: affiliates = [] } = useQuery({
 		queryKey: ["affiliates"],
@@ -74,9 +74,9 @@ export function BranchFormDialog({
 	});
 
 	const defaultValues: FormValues = {
-		name: branch?.name ?? "",
-		notes: branch?.notes ?? "",
-		affiliate_id: branch?.affiliateId ?? null,
+		name: location?.name ?? "",
+		notes: location?.notes ?? "",
+		affiliate_id: location?.affiliateId ?? null,
 	};
 
 	const createMutation = useMutation({
@@ -85,12 +85,12 @@ export function BranchFormDialog({
 			notes?: string | null;
 			affiliate_id?: number | null;
 		}) => {
-			const res = await eden.api.branches.post(data);
+			const res = await eden.api.locations.post(data);
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["branches"] });
+			queryClient.invalidateQueries({ queryKey: ["locations"] });
 			onOpenChange(false);
 		},
 	});
@@ -101,12 +101,14 @@ export function BranchFormDialog({
 			notes?: string | null;
 			affiliate_id?: number | null;
 		}) => {
-			const res = await eden.api.branches({ id: branch?.id ?? 0 }).patch(data);
+			const res = await eden.api
+				.locations({ id: location?.id ?? 0 })
+				.patch(data);
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["branches"] });
+			queryClient.invalidateQueries({ queryKey: ["locations"] });
 			onOpenChange(false);
 		},
 	});
@@ -114,7 +116,7 @@ export function BranchFormDialog({
 	const form = useForm({
 		defaultValues,
 		validators: {
-			onSubmit: branchSchema,
+			onSubmit: locationSchema,
 		},
 		onSubmit: async ({ value }) => {
 			const data = {
@@ -138,14 +140,14 @@ export function BranchFormDialog({
 		}
 	}, [open]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: branch?.id triggers re-populate
+	// biome-ignore lint/correctness/useExhaustiveDependencies: location?.id triggers re-populate
 	useEffect(() => {
 		if (open) {
-			form.setFieldValue("name", branch?.name ?? "");
-			form.setFieldValue("notes", branch?.notes ?? "");
-			form.setFieldValue("affiliate_id", branch?.affiliateId ?? null);
+			form.setFieldValue("name", location?.name ?? "");
+			form.setFieldValue("notes", location?.notes ?? "");
+			form.setFieldValue("affiliate_id", location?.affiliateId ?? null);
 		}
-	}, [open, branch?.id, form]);
+	}, [open, location?.id, form]);
 
 	const error = createMutation.error || updateMutation.error;
 
@@ -153,11 +155,13 @@ export function BranchFormDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>{isEditing ? "Edit Branch" : "Add Branch"}</DialogTitle>
+					<DialogTitle>
+						{isEditing ? "Edit Location" : "Add Location"}
+					</DialogTitle>
 					<DialogDescription>
 						{isEditing
-							? "Update the branch details below."
-							: "Enter the details for the new branch."}
+							? "Update the location details below."
+							: "Enter the details for the new location."}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -175,7 +179,7 @@ export function BranchFormDialog({
 				)}
 
 				<form
-					key={branch?.id ?? "new"}
+					key={location?.id ?? "new"}
 					onSubmit={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
@@ -288,7 +292,7 @@ export function BranchFormDialog({
 											: "Creating..."
 										: isEditing
 											? "Save Changes"
-											: "Create Branch"}
+											: "Create Location"}
 								</Button>
 							)}
 						/>

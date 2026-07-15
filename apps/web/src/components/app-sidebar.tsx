@@ -130,9 +130,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 						<SidebarMenuItem>
-							<SidebarMenuButton render={<a href="/branches" />}>
+							<SidebarMenuButton render={<a href="/locations" />}>
 								<NetworkIcon />
-								<span>Branches</span>
+								<span>Locations</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 						<SidebarMenuItem>

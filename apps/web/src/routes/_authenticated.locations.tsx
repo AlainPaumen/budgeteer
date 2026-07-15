@@ -10,8 +10,8 @@ import {
 	Trash2Icon,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import { BranchFormDialog } from "@/components/branch-form-dialog";
-import { DeleteBranchDialog } from "@/components/delete-branch-dialog";
+import { DeleteLocationDialog } from "@/components/delete-location-dialog";
+import { LocationFormDialog } from "@/components/location-form-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -25,8 +25,8 @@ import {
 } from "@/components/ui/table";
 import { eden } from "@/lib/api";
 
-export const Route = createFileRoute("/_authenticated/branches")({
-	component: BranchesPage,
+export const Route = createFileRoute("/_authenticated/locations")({
+	component: LocationsPage,
 });
 
 interface Affiliate {
@@ -34,7 +34,7 @@ interface Affiliate {
 	name: string;
 }
 
-interface Branch {
+interface Location {
 	id: number;
 	name: string;
 	notes: string | null;
@@ -46,8 +46,8 @@ interface Branch {
 	updatedAt: number;
 }
 
-interface BranchesResponse {
-	data: Branch[];
+interface LocationsResponse {
+	data: Location[];
 	pagination: {
 		page: number;
 		limit: number;
@@ -56,16 +56,18 @@ interface BranchesResponse {
 	};
 }
 
-function BranchesPage() {
+function LocationsPage() {
 	const [page, setPage] = useState(1);
 	const [search, setSearch] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState("");
 	const [order, setOrder] = useState<"asc" | "desc">("asc");
 	const [showInactive, setShowInactive] = useState(false);
 	const [formOpen, setFormOpen] = useState(false);
-	const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
+	const [editingLocation, setEditingLocation] = useState<Location | null>(null);
 	const [deleteOpen, setDeleteOpen] = useState(false);
-	const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
+	const [deletingLocation, setDeletingLocation] = useState<Location | null>(
+		null,
+	);
 
 	const handleSearchChange = (value: string) => {
 		setSearch(value);
@@ -75,7 +77,7 @@ function BranchesPage() {
 
 	const { data, isLoading } = useQuery({
 		queryKey: [
-			"branches",
+			"locations",
 			{ page, search: debouncedSearch, order, showInactive },
 		],
 		queryFn: async () => {
@@ -87,9 +89,9 @@ function BranchesPage() {
 			};
 			if (!showInactive) params.is_active = "true";
 			if (debouncedSearch) params.search = debouncedSearch;
-			const res = await eden.api.branches.get({ query: params });
+			const res = await eden.api.locations.get({ query: params });
 			if (res.error) throw res.error;
-			return res.data as unknown as BranchesResponse;
+			return res.data as unknown as LocationsResponse;
 		},
 	});
 
@@ -109,21 +111,21 @@ function BranchesPage() {
 		[affiliates],
 	);
 
-	const branches = data?.data ?? [];
+	const locations = data?.data ?? [];
 	const pagination = data?.pagination;
 
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
-				<h1 className="text-2xl font-bold">Branches</h1>
+				<h1 className="text-2xl font-bold">Locations</h1>
 				<Button
 					onClick={() => {
-						setEditingBranch(null);
+						setEditingLocation(null);
 						setFormOpen(true);
 					}}
 				>
 					<PlusIcon className="mr-2 size-4" />
-					Add Branch
+					Add Location
 				</Button>
 			</div>
 
@@ -131,7 +133,7 @@ function BranchesPage() {
 				<div className="relative max-w-sm">
 					<SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
 					<Input
-						placeholder="Search branches..."
+						placeholder="Search locations..."
 						className="pl-8"
 						value={search}
 						onChange={(e) => handleSearchChange(e.target.value)}
@@ -152,13 +154,13 @@ function BranchesPage() {
 
 			{isLoading ? (
 				<div className="py-12 text-center text-sm text-muted-foreground">
-					Loading branches...
+					Loading locations...
 				</div>
-			) : branches.length === 0 ? (
+			) : locations.length === 0 ? (
 				<div className="py-12 text-center text-sm text-muted-foreground">
 					{debouncedSearch
-						? "No branches match your search."
-						: "No branches yet. Add your first branch to get started."}
+						? "No locations match your search."
+						: "No locations yet. Add your first location to get started."}
 				</div>
 			) : (
 				<>
@@ -187,17 +189,17 @@ function BranchesPage() {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{branches.map((branch) => (
-								<TableRow key={branch.id}>
-									<TableCell className="font-medium">{branch.name}</TableCell>
+							{locations.map((location) => (
+								<TableRow key={location.id}>
+									<TableCell className="font-medium">{location.name}</TableCell>
 									<TableCell className="text-muted-foreground">
-										{branch.affiliateId
-											? (affiliateMap.get(branch.affiliateId) ??
-												`Affiliate #${branch.affiliateId}`)
+										{location.affiliateId
+											? (affiliateMap.get(location.affiliateId) ??
+												`Affiliate #${location.affiliateId}`)
 											: "—"}
 									</TableCell>
 									<TableCell className="text-muted-foreground">
-										{branch.notes || "—"}
+										{location.notes || "—"}
 									</TableCell>
 									<TableCell>
 										<div className="flex gap-1">
@@ -205,7 +207,7 @@ function BranchesPage() {
 												variant="ghost"
 												size="icon-sm"
 												onClick={() => {
-													setEditingBranch(branch);
+													setEditingLocation(location);
 													setFormOpen(true);
 												}}
 											>
@@ -215,11 +217,11 @@ function BranchesPage() {
 												variant="ghost"
 												size="icon-sm"
 												onClick={() => {
-													setDeletingBranch(branch);
+													setDeletingLocation(location);
 													setDeleteOpen(true);
 												}}
 											>
-												{branch.isActive ? (
+												{location.isActive ? (
 													<Trash2Icon className="size-4" />
 												) : (
 													<RotateCcwIcon className="size-4" />
@@ -261,19 +263,19 @@ function BranchesPage() {
 				</>
 			)}
 
-			<BranchFormDialog
+			<LocationFormDialog
 				open={formOpen}
 				onOpenChange={setFormOpen}
-				branch={editingBranch}
+				location={editingLocation}
 			/>
 
-			{deletingBranch && (
-				<DeleteBranchDialog
+			{deletingLocation && (
+				<DeleteLocationDialog
 					open={deleteOpen}
 					onOpenChange={setDeleteOpen}
-					branchId={deletingBranch.id}
-					branchName={deletingBranch.name}
-					isActive={deletingBranch.isActive}
+					locationId={deletingLocation.id}
+					locationName={deletingLocation.name}
+					isActive={deletingLocation.isActive}
 				/>
 			)}
 		</div>

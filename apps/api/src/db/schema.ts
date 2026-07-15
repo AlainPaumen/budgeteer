@@ -140,7 +140,7 @@ export const affiliateRelations = relations(affiliates, ({ one }) => ({
 	}),
 }));
 
-export const branches = sqliteTable("branches", {
+export const locations = sqliteTable("locations", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
 	name: text("name").notNull().unique(),
 	notes: text("notes"),
@@ -158,17 +158,17 @@ export const branches = sqliteTable("branches", {
 		.notNull(),
 });
 
-export const branchRelations = relations(branches, ({ one }) => ({
+export const locationRelations = relations(locations, ({ one }) => ({
 	createdByUser: one(user, {
-		fields: [branches.createdBy],
+		fields: [locations.createdBy],
 		references: [user.id],
 	}),
 	updatedByUser: one(user, {
-		fields: [branches.updatedBy],
+		fields: [locations.updatedBy],
 		references: [user.id],
 	}),
 	affiliate: one(affiliates, {
-		fields: [branches.affiliateId],
+		fields: [locations.affiliateId],
 		references: [affiliates.id],
 	}),
 }));

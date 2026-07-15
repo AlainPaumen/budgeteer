@@ -11,38 +11,38 @@ import {
 } from "@/components/ui/alert-dialog";
 import { eden } from "@/lib/api";
 
-interface DeleteBranchDialogProps {
+interface DeleteLocationDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	branchId: number;
-	branchName: string;
+	locationId: number;
+	locationName: string;
 	isActive: boolean;
 }
 
-export function DeleteBranchDialog({
+export function DeleteLocationDialog({
 	open,
 	onOpenChange,
-	branchId,
-	branchName,
+	locationId,
+	locationName,
 	isActive,
-}: DeleteBranchDialogProps) {
+}: DeleteLocationDialogProps) {
 	const queryClient = useQueryClient();
 
 	const deleteMutation = useMutation({
 		mutationFn: async () => {
 			if (isActive) {
-				const res = await eden.api.branches({ id: branchId }).delete();
+				const res = await eden.api.locations({ id: locationId }).delete();
 				if (res.error) throw res.error;
 				return res.data;
 			}
 			const res = await eden.api
-				.branches({ id: branchId })
+				.locations({ id: locationId })
 				.patch({ is_active: true });
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["branches"] });
+			queryClient.invalidateQueries({ queryKey: ["locations"] });
 			onOpenChange(false);
 		},
 	});
@@ -52,24 +52,24 @@ export function DeleteBranchDialog({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{isActive ? "Delete Branch" : "Undelete Branch"}
+						{isActive ? "Delete Location" : "Undelete Location"}
 					</AlertDialogTitle>
 					<AlertDialogDescription>
 						{isActive ? (
 							<>
 								Are you sure you want to delete{" "}
 								<span className="font-medium text-foreground">
-									{branchName}
+									{locationName}
 								</span>
-								? This will deactivate the branch but preserve its history.
+								? This will deactivate the location but preserve its history.
 							</>
 						) : (
 							<>
 								Are you sure you want to restore{" "}
 								<span className="font-medium text-foreground">
-									{branchName}
+									{locationName}
 								</span>
-								? This will reactivate the branch.
+								? This will reactivate the location.
 							</>
 						)}
 					</AlertDialogDescription>

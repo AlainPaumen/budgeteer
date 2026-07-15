@@ -2,10 +2,10 @@ import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
 import { auth } from "./auth";
 import { affiliateRoutes } from "./routes/affiliates";
-import { branchRoutes } from "./routes/branches";
 import { categoryRoutes } from "./routes/categories";
 import { costTypeRoutes } from "./routes/cost-types";
 import { invoiceRoutes } from "./routes/invoices";
+import { locationRoutes } from "./routes/locations";
 import { serviceRoutes } from "./routes/services";
 import { supplierRoutes } from "./routes/suppliers";
 
@@ -27,7 +27,7 @@ const app = new Elysia()
 	.mount(auth.handler)
 	.use(supplierRoutes)
 	.use(affiliateRoutes)
-	.use(branchRoutes)
+	.use(locationRoutes)
 	.use(serviceRoutes)
 	.use(costTypeRoutes)
 	.use(categoryRoutes)
