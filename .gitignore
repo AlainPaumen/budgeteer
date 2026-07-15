@@ -1,6 +1,7 @@
 # Database
 apps/api/data/*.db
 apps/api/data/*.db-journal
+apps/api/src/db/budgeteer.db
 
 # Dependencies
 node_modules/

@@ -197,3 +197,97 @@ export const categoryRelations = relations(categories, ({ one }) => ({
 		references: [user.id],
 	}),
 }));
+
+export const invoices = sqliteTable("invoices", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	supplierId: integer("supplier_id")
+		.notNull()
+		.references(() => suppliers.id),
+	invoiceDate: integer("invoice_date", { mode: "timestamp_ms" }).notNull(),
+	invoiceNumber: text("invoice_number").notNull().unique(),
+	createdBy: text("created_by")
+		.notNull()
+		.references(() => user.id),
+	createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+	updatedBy: text("updated_by")
+		.notNull()
+		.references(() => user.id),
+	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+		.$onUpdate(() => new Date())
+		.notNull(),
+});
+
+export const invoiceRelations = relations(invoices, ({ one, many }) => ({
+	supplier: one(suppliers, {
+		fields: [invoices.supplierId],
+		references: [suppliers.id],
+	}),
+	createdByUser: one(user, {
+		fields: [invoices.createdBy],
+		references: [user.id],
+	}),
+	updatedByUser: one(user, {
+		fields: [invoices.updatedBy],
+		references: [user.id],
+	}),
+	lines: many(invoiceLines),
+}));
+
+export const invoiceLines = sqliteTable("invoice_lines", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	invoiceId: integer("invoice_id")
+		.notNull()
+		.references(() => invoices.id, { onDelete: "cascade" }),
+	description: text("description").notNull(),
+	unitPrice: integer("unit_price").notNull(),
+	numberOfUnits: integer("number_of_units").notNull(),
+	totalAmount: integer("total_amount").notNull(),
+	startDate: integer("start_date", { mode: "timestamp_ms" }).notNull(),
+	endDate: integer("end_date", { mode: "timestamp_ms" }).notNull(),
+	serviceId: integer("service_id")
+		.notNull()
+		.references(() => services.id),
+	categoryId: integer("category_id")
+		.notNull()
+		.references(() => categories.id),
+	costTypeId: integer("cost_type_id")
+		.notNull()
+		.references(() => costTypes.id),
+	createdBy: text("created_by")
+		.notNull()
+		.references(() => user.id),
+	createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+	updatedBy: text("updated_by")
+		.notNull()
+		.references(() => user.id),
+	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+		.$onUpdate(() => new Date())
+		.notNull(),
+});
+
+export const invoiceLineRelations = relations(invoiceLines, ({ one }) => ({
+	invoice: one(invoices, {
+		fields: [invoiceLines.invoiceId],
+		references: [invoices.id],
+	}),
+	service: one(services, {
+		fields: [invoiceLines.serviceId],
+		references: [services.id],
+	}),
+	category: one(categories, {
+		fields: [invoiceLines.categoryId],
+		references: [categories.id],
+	}),
+	costType: one(costTypes, {
+		fields: [invoiceLines.costTypeId],
+		references: [costTypes.id],
+	}),
+	createdByUser: one(user, {
+		fields: [invoiceLines.createdBy],
+		references: [user.id],
+	}),
+	updatedByUser: one(user, {
+		fields: [invoiceLines.updatedBy],
+		references: [user.id],
+	}),
+}));

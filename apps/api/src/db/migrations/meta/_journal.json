@@ -36,6 +36,34 @@
       "when": 1784027352860,
       "tag": "0004_little_roulette",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1784100000000,
+      "tag": "0005_rename_towers_to_services",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1784100000001,
+      "tag": "0006_add_cost_types",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1784100000002,
+      "tag": "0007_add_categories",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1784100000003,
+      "tag": "0008_add_invoices",
+      "breakpoints": true
     }
   ]
 }
