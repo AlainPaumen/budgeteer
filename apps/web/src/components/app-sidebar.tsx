@@ -1,6 +1,8 @@
 import {
+	BanknoteArrowDownIcon,
 	Building2Icon,
 	FoldersIcon,
+	FolderTreeIcon,
 	FrameIcon,
 	LifeBuoyIcon,
 	MapIcon,
@@ -100,7 +102,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</SidebarHeader>
 			<SidebarContent>
 				<SidebarGroup>
-					<SidebarGroupLabel>Budget</SidebarGroupLabel>
+					<SidebarGroupLabel>Invoice Tracking</SidebarGroupLabel>
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton render={<a href="/invoices" />}>
+								<BanknoteArrowDownIcon />
+								<span>Invoices</span>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarGroup>
+				<SidebarGroup>
+					<SidebarGroupLabel>Budget Configuration</SidebarGroupLabel>
 					<SidebarMenu>
 						<SidebarMenuItem>
 							<SidebarMenuButton render={<a href="/suppliers" />}>
@@ -122,7 +135,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 						</SidebarMenuItem>
 						<SidebarMenuItem>
 							<SidebarMenuButton render={<a href="/categories" />}>
-								<FoldersIcon />
+								<FolderTreeIcon />
 								<span>Categories</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
