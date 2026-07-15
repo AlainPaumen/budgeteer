@@ -3,18 +3,16 @@ import { Elysia } from "elysia";
 import { z } from "zod";
 import { auth } from "../auth";
 import { db } from "../db";
-import { branches } from "../db/schema";
+import { locations } from "../db/schema";
 
-const createBranchSchema = z.object({
+const createLocationSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
 	notes: z.string().max(1000).nullable().optional(),
-	location_id: z.number().int().positive().nullable().optional(),
 });
 
-const updateBranchSchema = z.object({
+const updateLocationSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255).optional(),
 	notes: z.string().max(1000).nullable().optional(),
-	location_id: z.number().int().positive().nullable().optional(),
 	is_active: z.coerce.boolean().optional(),
 });
 
@@ -34,7 +32,7 @@ async function getSessionUserId(request: Request): Promise<string | null> {
 	return session?.user?.id ?? null;
 }
 
-export const branchRoutes = new Elysia({ prefix: "/api/branches" })
+export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 	.get("/", async ({ request, query }) => {
 		const userId = await getSessionUserId(request);
 		if (!userId) {
@@ -60,10 +58,10 @@ export const branchRoutes = new Elysia({ prefix: "/api/branches" })
 
 		const conditions = [];
 		if (is_active !== undefined) {
-			conditions.push(eq(branches.isActive, is_active));
+			conditions.push(eq(locations.isActive, is_active));
 		}
 		if (search) {
-			conditions.push(like(branches.name, `%${search}%`));
+			conditions.push(like(locations.name, `%${search}%`));
 		}
 
 		const where = and(...conditions);
@@ -72,12 +70,12 @@ export const branchRoutes = new Elysia({ prefix: "/api/branches" })
 		const [data, totalResult] = await Promise.all([
 			db
 				.select()
-				.from(branches)
+				.from(locations)
 				.where(where)
-				.orderBy(orderFn(branches[sort]))
+				.orderBy(orderFn(locations[sort]))
 				.limit(limit)
 				.offset(offset),
-			db.select({ value: count() }).from(branches).where(where),
+			db.select({ value: count() }).from(locations).where(where),
 		]);
 
 		const total = totalResult[0]?.value ?? 0;
@@ -101,7 +99,7 @@ export const branchRoutes = new Elysia({ prefix: "/api/branches" })
 			});
 		}
 
-		const parsed = createBranchSchema.safeParse(body);
+		const parsed = createLocationSchema.safeParse(body);
 		if (!parsed.success) {
 			return new Response(
 				JSON.stringify({
@@ -112,28 +110,27 @@ export const branchRoutes = new Elysia({ prefix: "/api/branches" })
 			);
 		}
 
-		const { name, notes, location_id } = parsed.data;
+		const { name, notes } = parsed.data;
 
 		const existing = await db
-			.select({ id: branches.id })
-			.from(branches)
-			.where(and(eq(branches.name, name), eq(branches.isActive, true)))
+			.select({ id: locations.id })
+			.from(locations)
+			.where(and(eq(locations.name, name), eq(locations.isActive, true)))
 			.limit(1);
 
 		if (existing.length > 0) {
 			return new Response(
-				JSON.stringify({ error: "A branch with this name already exists" }),
+				JSON.stringify({ error: "A location with this name already exists" }),
 				{ status: 409, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
 		const now = new Date();
 		const [created] = await db
-			.insert(branches)
+			.insert(locations)
 			.values({
 				name,
 				notes: notes ?? null,
-				locationId: location_id ?? null,
 				createdBy: userId,
 				createdAt: now,
 				updatedBy: userId,
@@ -152,7 +149,7 @@ export const branchRoutes = new Elysia({ prefix: "/api/branches" })
 			});
 		}
 
-		const parsed = updateBranchSchema.safeParse(body);
+		const parsed = updateLocationSchema.safeParse(body);
 		if (!parsed.success) {
 			return new Response(
 				JSON.stringify({
@@ -173,45 +170,44 @@ export const branchRoutes = new Elysia({ prefix: "/api/branches" })
 
 		const existing = await db
 			.select()
-			.from(branches)
-			.where(eq(branches.id, id))
+			.from(locations)
+			.where(eq(locations.id, id))
 			.limit(1);
 
 		if (existing.length === 0) {
-			return new Response(JSON.stringify({ error: "Branch not found" }), {
+			return new Response(JSON.stringify({ error: "Location not found" }), {
 				status: 404,
 				headers: { "Content-Type": "application/json" },
 			});
 		}
 
-		const { name, notes, location_id, is_active } = parsed.data;
+		const { name, notes, is_active } = parsed.data;
 
 		if (name && name !== existing[0].name) {
 			const nameTaken = await db
-				.select({ id: branches.id })
-				.from(branches)
-				.where(and(eq(branches.name, name), eq(branches.isActive, true)))
+				.select({ id: locations.id })
+				.from(locations)
+				.where(and(eq(locations.name, name), eq(locations.isActive, true)))
 				.limit(1);
 
 			if (nameTaken.length > 0) {
 				return new Response(
-					JSON.stringify({ error: "A branch with this name already exists" }),
+					JSON.stringify({ error: "A location with this name already exists" }),
 					{ status: 409, headers: { "Content-Type": "application/json" } },
 				);
 			}
 		}
 
 		const [updated] = await db
-			.update(branches)
+			.update(locations)
 			.set({
 				...(name !== undefined && { name }),
 				...(notes !== undefined && { notes: notes ?? null }),
-				...(location_id !== undefined && { locationId: location_id ?? null }),
 				...(is_active !== undefined && { isActive: is_active }),
 				updatedBy: userId,
 				updatedAt: new Date(),
 			})
-			.where(eq(branches.id, id))
+			.where(eq(locations.id, id))
 			.returning();
 
 		return updated;
@@ -235,25 +231,25 @@ export const branchRoutes = new Elysia({ prefix: "/api/branches" })
 
 		const existing = await db
 			.select()
-			.from(branches)
-			.where(and(eq(branches.id, id), eq(branches.isActive, true)))
+			.from(locations)
+			.where(and(eq(locations.id, id), eq(locations.isActive, true)))
 			.limit(1);
 
 		if (existing.length === 0) {
-			return new Response(JSON.stringify({ error: "Branch not found" }), {
+			return new Response(JSON.stringify({ error: "Location not found" }), {
 				status: 404,
 				headers: { "Content-Type": "application/json" },
 			});
 		}
 
 		await db
-			.update(branches)
+			.update(locations)
 			.set({
 				isActive: false,
 				updatedBy: userId,
 				updatedAt: new Date(),
 			})
-			.where(eq(branches.id, id));
+			.where(eq(locations.id, id));
 
 		return { success: true };
 	});

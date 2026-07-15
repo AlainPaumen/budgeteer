@@ -78,6 +78,13 @@
       "when": 1784100000005,
       "tag": "0010_add_branches",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1784100000006,
+      "tag": "0011_add_locations",
+      "breakpoints": true
     }
   ]
 }

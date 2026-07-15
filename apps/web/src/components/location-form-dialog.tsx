@@ -1,5 +1,5 @@
 import { useForm } from "@tanstack/react-form";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
@@ -13,34 +13,20 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldError, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { eden } from "@/lib/api";
 
-const branchSchema = z.object({
+const locationSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
 	notes: z.string().max(1000).nullable(),
-	location_id: z.number().positive().nullable(),
 });
 
-type FormValues = z.infer<typeof branchSchema>;
+type FormValues = z.infer<typeof locationSchema>;
 
 interface Location {
 	id: number;
 	name: string;
-}
-
-interface Branch {
-	id: number;
-	name: string;
 	notes: string | null;
-	locationId: number | null;
 	isActive: boolean;
 	createdBy: string;
 	createdAt: number;
@@ -48,65 +34,47 @@ interface Branch {
 	updatedAt: number;
 }
 
-interface BranchFormDialogProps {
+interface LocationFormDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	branch?: Branch | null;
+	location?: Location | null;
 }
 
-export function BranchFormDialog({
+export function LocationFormDialog({
 	open,
 	onOpenChange,
-	branch,
-}: BranchFormDialogProps) {
+	location,
+}: LocationFormDialogProps) {
 	const queryClient = useQueryClient();
-	const isEditing = !!branch;
-
-	const { data: locations = [] } = useQuery({
-		queryKey: ["locations"],
-		queryFn: async () => {
-			const res = await eden.api.locations.get({
-				query: { limit: "100", is_active: "true" },
-			});
-			if (res.error) throw res.error;
-			return (res.data as unknown as { data: Location[] }).data;
-		},
-	});
+	const isEditing = !!location;
 
 	const defaultValues: FormValues = {
-		name: branch?.name ?? "",
-		notes: branch?.notes ?? "",
-		location_id: branch?.locationId ?? null,
+		name: location?.name ?? "",
+		notes: location?.notes ?? "",
 	};
 
 	const createMutation = useMutation({
-		mutationFn: async (data: {
-			name: string;
-			notes?: string | null;
-			location_id?: number | null;
-		}) => {
-			const res = await eden.api.branches.post(data);
+		mutationFn: async (data: { name: string; notes?: string | null }) => {
+			const res = await eden.api.locations.post(data);
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["branches"] });
+			queryClient.invalidateQueries({ queryKey: ["locations"] });
 			onOpenChange(false);
 		},
 	});
 
 	const updateMutation = useMutation({
-		mutationFn: async (data: {
-			name?: string;
-			notes?: string | null;
-			location_id?: number | null;
-		}) => {
-			const res = await eden.api.branches({ id: branch?.id ?? 0 }).patch(data);
+		mutationFn: async (data: { name?: string; notes?: string | null }) => {
+			const res = await eden.api
+				.locations({ id: location?.id ?? 0 })
+				.patch(data);
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["branches"] });
+			queryClient.invalidateQueries({ queryKey: ["locations"] });
 			onOpenChange(false);
 		},
 	});
@@ -114,13 +82,12 @@ export function BranchFormDialog({
 	const form = useForm({
 		defaultValues,
 		validators: {
-			onSubmit: branchSchema,
+			onSubmit: locationSchema,
 		},
 		onSubmit: async ({ value }) => {
 			const data = {
 				name: value.name,
 				notes: value.notes || null,
-				location_id: value.location_id || null,
 			};
 			if (isEditing) {
 				await updateMutation.mutateAsync(data);
@@ -138,14 +105,13 @@ export function BranchFormDialog({
 		}
 	}, [open]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: branch?.id triggers re-populate
+	// biome-ignore lint/correctness/useExhaustiveDependencies: location?.id triggers re-populate
 	useEffect(() => {
 		if (open) {
-			form.setFieldValue("name", branch?.name ?? "");
-			form.setFieldValue("notes", branch?.notes ?? "");
-			form.setFieldValue("location_id", branch?.locationId ?? null);
+			form.setFieldValue("name", location?.name ?? "");
+			form.setFieldValue("notes", location?.notes ?? "");
 		}
-	}, [open, branch?.id, form]);
+	}, [open, location?.id, form]);
 
 	const error = createMutation.error || updateMutation.error;
 
@@ -153,11 +119,13 @@ export function BranchFormDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>{isEditing ? "Edit Branch" : "Add Branch"}</DialogTitle>
+					<DialogTitle>
+						{isEditing ? "Edit Location" : "Add Location"}
+					</DialogTitle>
 					<DialogDescription>
 						{isEditing
-							? "Update the branch details below."
-							: "Enter the details for the new branch."}
+							? "Update the location details below."
+							: "Enter the details for the new location."}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -175,7 +143,7 @@ export function BranchFormDialog({
 				)}
 
 				<form
-					key={branch?.id ?? "new"}
+					key={location?.id ?? "new"}
 					onSubmit={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
@@ -198,7 +166,7 @@ export function BranchFormDialog({
 									<Input
 										id="name"
 										name="name"
-										placeholder="e.g. Main Office"
+										placeholder="e.g. New York Office"
 										value={field.state.value}
 										onBlur={field.handleBlur}
 										onChange={(e) => field.handleChange(e.target.value)}
@@ -208,37 +176,6 @@ export function BranchFormDialog({
 								</Field>
 							);
 						}}
-					/>
-
-					<form.Field
-						name="location_id"
-						// biome-ignore lint/correctness/noChildrenProp: TanStack Form render prop
-						children={(field) => (
-							<Field>
-								<FieldLabel htmlFor="location_id">Location</FieldLabel>
-								<Select
-									value={field.state.value ? String(field.state.value) : ""}
-									onValueChange={(value) => {
-										field.handleChange(value ? Number(value) : null);
-									}}
-									items={locations.map((l) => ({
-										value: String(l.id),
-										label: l.name,
-									}))}
-								>
-									<SelectTrigger className="w-full">
-										<SelectValue placeholder="Select a location" />
-									</SelectTrigger>
-									<SelectContent>
-										{locations.map((location) => (
-											<SelectItem key={location.id} value={String(location.id)}>
-												{location.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</Field>
-						)}
 					/>
 
 					<form.Field
@@ -285,7 +222,7 @@ export function BranchFormDialog({
 											: "Creating..."
 										: isEditing
 											? "Save Changes"
-											: "Create Branch"}
+											: "Create Location"}
 								</Button>
 							)}
 						/>

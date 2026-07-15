@@ -6,6 +6,7 @@ import {
 	FrameIcon,
 	LifeBuoyIcon,
 	MapIcon,
+	MapPinIcon,
 	NetworkIcon,
 	PieChartIcon,
 	SendIcon,
@@ -120,6 +121,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							<SidebarMenuButton render={<a href="/suppliers" />}>
 								<Building2Icon />
 								<span>Suppliers</span>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton render={<a href="/locations" />}>
+								<MapPinIcon />
+								<span>Locations</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 						<SidebarMenuItem>

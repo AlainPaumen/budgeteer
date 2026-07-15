@@ -112,10 +112,39 @@ export const supplierRelations = relations(suppliers, ({ one }) => ({
 	}),
 }));
 
+export const locations = sqliteTable("locations", {
+	id: integer("id").primaryKey({ autoIncrement: true }),
+	name: text("name").notNull().unique(),
+	notes: text("notes"),
+	isActive: integer("is_active", { mode: "boolean" }).default(true).notNull(),
+	createdBy: text("created_by")
+		.notNull()
+		.references(() => user.id),
+	createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
+	updatedBy: text("updated_by")
+		.notNull()
+		.references(() => user.id),
+	updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+		.$onUpdate(() => new Date())
+		.notNull(),
+});
+
+export const locationRelations = relations(locations, ({ one }) => ({
+	createdByUser: one(user, {
+		fields: [locations.createdBy],
+		references: [user.id],
+	}),
+	updatedByUser: one(user, {
+		fields: [locations.updatedBy],
+		references: [user.id],
+	}),
+}));
+
 export const branches = sqliteTable("branches", {
 	id: integer("id").primaryKey({ autoIncrement: true }),
 	name: text("name").notNull().unique(),
 	notes: text("notes"),
+	locationId: integer("location_id").references(() => locations.id),
 	isActive: integer("is_active", { mode: "boolean" }).default(true).notNull(),
 	createdBy: text("created_by")
 		.notNull()
@@ -137,6 +166,10 @@ export const branchRelations = relations(branches, ({ one }) => ({
 	updatedByUser: one(user, {
 		fields: [branches.updatedBy],
 		references: [user.id],
+	}),
+	location: one(locations, {
+		fields: [branches.locationId],
+		references: [locations.id],
 	}),
 }));
 
