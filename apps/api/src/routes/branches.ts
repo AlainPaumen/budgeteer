@@ -3,14 +3,14 @@ import { Elysia } from "elysia";
 import { z } from "zod";
 import { auth } from "../auth";
 import { db } from "../db";
-import { affiliates } from "../db/schema";
+import { branches } from "../db/schema";
 
-const createAffiliateSchema = z.object({
+const createBranchSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
 	notes: z.string().max(1000).nullable().optional(),
 });
 
-const updateAffiliateSchema = z.object({
+const updateBranchSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255).optional(),
 	notes: z.string().max(1000).nullable().optional(),
 	is_active: z.coerce.boolean().optional(),
@@ -32,7 +32,7 @@ async function getSessionUserId(request: Request): Promise<string | null> {
 	return session?.user?.id ?? null;
 }
 
-export const affiliateRoutes = new Elysia({ prefix: "/api/affiliates" })
+export const branchRoutes = new Elysia({ prefix: "/api/branches" })
 	.get("/", async ({ request, query }) => {
 		const userId = await getSessionUserId(request);
 		if (!userId) {
@@ -58,10 +58,10 @@ export const affiliateRoutes = new Elysia({ prefix: "/api/affiliates" })
 
 		const conditions = [];
 		if (is_active !== undefined) {
-			conditions.push(eq(affiliates.isActive, is_active));
+			conditions.push(eq(branches.isActive, is_active));
 		}
 		if (search) {
-			conditions.push(like(affiliates.name, `%${search}%`));
+			conditions.push(like(branches.name, `%${search}%`));
 		}
 
 		const where = and(...conditions);
@@ -70,12 +70,12 @@ export const affiliateRoutes = new Elysia({ prefix: "/api/affiliates" })
 		const [data, totalResult] = await Promise.all([
 			db
 				.select()
-				.from(affiliates)
+				.from(branches)
 				.where(where)
-				.orderBy(orderFn(affiliates[sort]))
+				.orderBy(orderFn(branches[sort]))
 				.limit(limit)
 				.offset(offset),
-			db.select({ value: count() }).from(affiliates).where(where),
+			db.select({ value: count() }).from(branches).where(where),
 		]);
 
 		const total = totalResult[0]?.value ?? 0;
@@ -99,7 +99,7 @@ export const affiliateRoutes = new Elysia({ prefix: "/api/affiliates" })
 			});
 		}
 
-		const parsed = createAffiliateSchema.safeParse(body);
+		const parsed = createBranchSchema.safeParse(body);
 		if (!parsed.success) {
 			return new Response(
 				JSON.stringify({
@@ -113,21 +113,21 @@ export const affiliateRoutes = new Elysia({ prefix: "/api/affiliates" })
 		const { name, notes } = parsed.data;
 
 		const existing = await db
-			.select({ id: affiliates.id })
-			.from(affiliates)
-			.where(and(eq(affiliates.name, name), eq(affiliates.isActive, true)))
+			.select({ id: branches.id })
+			.from(branches)
+			.where(and(eq(branches.name, name), eq(branches.isActive, true)))
 			.limit(1);
 
 		if (existing.length > 0) {
 			return new Response(
-				JSON.stringify({ error: "An affiliate with this name already exists" }),
+				JSON.stringify({ error: "A branch with this name already exists" }),
 				{ status: 409, headers: { "Content-Type": "application/json" } },
 			);
 		}
 
 		const now = new Date();
 		const [created] = await db
-			.insert(affiliates)
+			.insert(branches)
 			.values({
 				name,
 				notes: notes ?? null,
@@ -149,7 +149,7 @@ export const affiliateRoutes = new Elysia({ prefix: "/api/affiliates" })
 			});
 		}
 
-		const parsed = updateAffiliateSchema.safeParse(body);
+		const parsed = updateBranchSchema.safeParse(body);
 		if (!parsed.success) {
 			return new Response(
 				JSON.stringify({
@@ -170,12 +170,12 @@ export const affiliateRoutes = new Elysia({ prefix: "/api/affiliates" })
 
 		const existing = await db
 			.select()
-			.from(affiliates)
-			.where(eq(affiliates.id, id))
+			.from(branches)
+			.where(eq(branches.id, id))
 			.limit(1);
 
 		if (existing.length === 0) {
-			return new Response(JSON.stringify({ error: "Affiliate not found" }), {
+			return new Response(JSON.stringify({ error: "Branch not found" }), {
 				status: 404,
 				headers: { "Content-Type": "application/json" },
 			});
@@ -185,23 +185,21 @@ export const affiliateRoutes = new Elysia({ prefix: "/api/affiliates" })
 
 		if (name && name !== existing[0].name) {
 			const nameTaken = await db
-				.select({ id: affiliates.id })
-				.from(affiliates)
-				.where(and(eq(affiliates.name, name), eq(affiliates.isActive, true)))
+				.select({ id: branches.id })
+				.from(branches)
+				.where(and(eq(branches.name, name), eq(branches.isActive, true)))
 				.limit(1);
 
 			if (nameTaken.length > 0) {
 				return new Response(
-					JSON.stringify({
-						error: "An affiliate with this name already exists",
-					}),
+					JSON.stringify({ error: "A branch with this name already exists" }),
 					{ status: 409, headers: { "Content-Type": "application/json" } },
 				);
 			}
 		}
 
 		const [updated] = await db
-			.update(affiliates)
+			.update(branches)
 			.set({
 				...(name !== undefined && { name }),
 				...(notes !== undefined && { notes: notes ?? null }),
@@ -209,7 +207,7 @@ export const affiliateRoutes = new Elysia({ prefix: "/api/affiliates" })
 				updatedBy: userId,
 				updatedAt: new Date(),
 			})
-			.where(eq(affiliates.id, id))
+			.where(eq(branches.id, id))
 			.returning();
 
 		return updated;
@@ -233,25 +231,25 @@ export const affiliateRoutes = new Elysia({ prefix: "/api/affiliates" })
 
 		const existing = await db
 			.select()
-			.from(affiliates)
-			.where(and(eq(affiliates.id, id), eq(affiliates.isActive, true)))
+			.from(branches)
+			.where(and(eq(branches.id, id), eq(branches.isActive, true)))
 			.limit(1);
 
 		if (existing.length === 0) {
-			return new Response(JSON.stringify({ error: "Affiliate not found" }), {
+			return new Response(JSON.stringify({ error: "Branch not found" }), {
 				status: 404,
 				headers: { "Content-Type": "application/json" },
 			});
 		}
 
 		await db
-			.update(affiliates)
+			.update(branches)
 			.set({
 				isActive: false,
 				updatedBy: userId,
 				updatedAt: new Date(),
 			})
-			.where(eq(affiliates.id, id));
+			.where(eq(branches.id, id));
 
 		return { success: true };
 	});

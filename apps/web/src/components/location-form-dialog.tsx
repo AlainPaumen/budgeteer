@@ -26,12 +26,12 @@ import { eden } from "@/lib/api";
 const locationSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
 	notes: z.string().max(1000).nullable(),
-	affiliate_id: z.number().positive().nullable(),
+	branch_id: z.number().positive().nullable(),
 });
 
 type FormValues = z.infer<typeof locationSchema>;
 
-interface Affiliate {
+interface Branch {
 	id: number;
 	name: string;
 }
@@ -40,7 +40,7 @@ interface Location {
 	id: number;
 	name: string;
 	notes: string | null;
-	affiliateId: number | null;
+	branchId: number | null;
 	isActive: boolean;
 	createdBy: string;
 	createdAt: number;
@@ -62,28 +62,28 @@ export function LocationFormDialog({
 	const queryClient = useQueryClient();
 	const isEditing = !!location;
 
-	const { data: affiliates = [] } = useQuery({
-		queryKey: ["affiliates"],
+	const { data: branches = [] } = useQuery({
+		queryKey: ["branches"],
 		queryFn: async () => {
-			const res = await eden.api.affiliates.get({
+			const res = await eden.api.branches.get({
 				query: { limit: "100", is_active: "true" },
 			});
 			if (res.error) throw res.error;
-			return (res.data as unknown as { data: Affiliate[] }).data;
+			return (res.data as unknown as { data: Branch[] }).data;
 		},
 	});
 
 	const defaultValues: FormValues = {
 		name: location?.name ?? "",
 		notes: location?.notes ?? "",
-		affiliate_id: location?.affiliateId ?? null,
+		branch_id: location?.branchId ?? null,
 	};
 
 	const createMutation = useMutation({
 		mutationFn: async (data: {
 			name: string;
 			notes?: string | null;
-			affiliate_id?: number | null;
+			branch_id?: number | null;
 		}) => {
 			const res = await eden.api.locations.post(data);
 			if (res.error) throw res.error;
@@ -99,7 +99,7 @@ export function LocationFormDialog({
 		mutationFn: async (data: {
 			name?: string;
 			notes?: string | null;
-			affiliate_id?: number | null;
+			branch_id?: number | null;
 		}) => {
 			const res = await eden.api
 				.locations({ id: location?.id ?? 0 })
@@ -122,7 +122,7 @@ export function LocationFormDialog({
 			const data = {
 				name: value.name,
 				notes: value.notes || null,
-				affiliate_id: value.affiliate_id || null,
+				branch_id: value.branch_id || null,
 			};
 			if (isEditing) {
 				await updateMutation.mutateAsync(data);
@@ -145,7 +145,7 @@ export function LocationFormDialog({
 		if (open) {
 			form.setFieldValue("name", location?.name ?? "");
 			form.setFieldValue("notes", location?.notes ?? "");
-			form.setFieldValue("affiliate_id", location?.affiliateId ?? null);
+			form.setFieldValue("branch_id", location?.branchId ?? null);
 		}
 	}, [open, location?.id, form]);
 
@@ -215,31 +215,28 @@ export function LocationFormDialog({
 					/>
 
 					<form.Field
-						name="affiliate_id"
+						name="branch_id"
 						// biome-ignore lint/correctness/noChildrenProp: TanStack Form render prop
 						children={(field) => (
 							<Field>
-								<FieldLabel htmlFor="affiliate_id">Affiliate</FieldLabel>
+								<FieldLabel htmlFor="branch_id">Branch</FieldLabel>
 								<Select
 									value={field.state.value ? String(field.state.value) : ""}
 									onValueChange={(value) => {
 										field.handleChange(value ? Number(value) : null);
 									}}
-									items={affiliates.map((a) => ({
-										value: String(a.id),
-										label: a.name,
+									items={branches.map((b) => ({
+										value: String(b.id),
+										label: b.name,
 									}))}
 								>
 									<SelectTrigger className="w-full">
-										<SelectValue placeholder="Select an affiliate" />
+										<SelectValue placeholder="Select a branch" />
 									</SelectTrigger>
 									<SelectContent>
-										{affiliates.map((affiliate) => (
-											<SelectItem
-												key={affiliate.id}
-												value={String(affiliate.id)}
-											>
-												{affiliate.name}
+										{branches.map((branch) => (
+											<SelectItem key={branch.id} value={String(branch.id)}>
+												{branch.name}
 											</SelectItem>
 										))}
 									</SelectContent>

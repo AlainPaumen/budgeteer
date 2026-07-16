@@ -8,13 +8,13 @@ import { locations } from "../db/schema";
 const createLocationSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
 	notes: z.string().max(1000).nullable().optional(),
-	affiliate_id: z.number().int().positive().nullable().optional(),
+	branch_id: z.number().int().positive().nullable().optional(),
 });
 
 const updateLocationSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255).optional(),
 	notes: z.string().max(1000).nullable().optional(),
-	affiliate_id: z.number().int().positive().nullable().optional(),
+	branch_id: z.number().int().positive().nullable().optional(),
 	is_active: z.coerce.boolean().optional(),
 });
 
@@ -112,7 +112,7 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 			);
 		}
 
-		const { name, notes, affiliate_id } = parsed.data;
+		const { name, notes, branch_id } = parsed.data;
 
 		const existing = await db
 			.select({ id: locations.id })
@@ -133,7 +133,7 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 			.values({
 				name,
 				notes: notes ?? null,
-				affiliateId: affiliate_id ?? null,
+				branchId: branch_id ?? null,
 				createdBy: userId,
 				createdAt: now,
 				updatedBy: userId,
@@ -184,7 +184,7 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 			});
 		}
 
-		const { name, notes, affiliate_id, is_active } = parsed.data;
+		const { name, notes, branch_id, is_active } = parsed.data;
 
 		if (name && name !== existing[0].name) {
 			const nameTaken = await db
@@ -206,8 +206,8 @@ export const locationRoutes = new Elysia({ prefix: "/api/locations" })
 			.set({
 				...(name !== undefined && { name }),
 				...(notes !== undefined && { notes: notes ?? null }),
-				...(affiliate_id !== undefined && {
-					affiliateId: affiliate_id ?? null,
+				...(branch_id !== undefined && {
+					branchId: branch_id ?? null,
 				}),
 				...(is_active !== undefined && { isActive: is_active }),
 				updatedBy: userId,

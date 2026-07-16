@@ -11,38 +11,38 @@ import {
 } from "@/components/ui/alert-dialog";
 import { eden } from "@/lib/api";
 
-interface DeleteAffiliateDialogProps {
+interface DeleteBranchDialogProps {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
-	affiliateId: number;
-	affiliateName: string;
+	branchId: number;
+	branchName: string;
 	isActive: boolean;
 }
 
-export function DeleteAffiliateDialog({
+export function DeleteBranchDialog({
 	open,
 	onOpenChange,
-	affiliateId,
-	affiliateName,
+	branchId,
+	branchName,
 	isActive,
-}: DeleteAffiliateDialogProps) {
+}: DeleteBranchDialogProps) {
 	const queryClient = useQueryClient();
 
 	const deleteMutation = useMutation({
 		mutationFn: async () => {
 			if (isActive) {
-				const res = await eden.api.affiliates({ id: affiliateId }).delete();
+				const res = await eden.api.branches({ id: branchId }).delete();
 				if (res.error) throw res.error;
 				return res.data;
 			}
 			const res = await eden.api
-				.affiliates({ id: affiliateId })
+				.branches({ id: branchId })
 				.patch({ is_active: true });
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["affiliates"] });
+			queryClient.invalidateQueries({ queryKey: ["branches"] });
 			onOpenChange(false);
 		},
 	});
@@ -52,24 +52,24 @@ export function DeleteAffiliateDialog({
 			<AlertDialogContent>
 				<AlertDialogHeader>
 					<AlertDialogTitle>
-						{isActive ? "Delete Affiliate" : "Undelete Affiliate"}
+						{isActive ? "Delete Branch" : "Undelete Branch"}
 					</AlertDialogTitle>
 					<AlertDialogDescription>
 						{isActive ? (
 							<>
 								Are you sure you want to delete{" "}
 								<span className="font-medium text-foreground">
-									{affiliateName}
+									{branchName}
 								</span>
-								? This will deactivate the affiliate but preserve its history.
+								? This will deactivate the branch but preserve its history.
 							</>
 						) : (
 							<>
 								Are you sure you want to restore{" "}
 								<span className="font-medium text-foreground">
-									{affiliateName}
+									{branchName}
 								</span>
-								? This will reactivate the affiliate.
+								? This will reactivate the branch.
 							</>
 						)}
 					</AlertDialogDescription>

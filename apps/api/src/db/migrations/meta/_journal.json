@@ -93,12 +93,19 @@
       "tag": "0012_rename_locations_to_affiliates",
       "breakpoints": true
     },
-    {
-      "idx": 13,
-      "version": "6",
-      "when": 1784100000008,
-      "tag": "0013_rename_branches_to_locations",
-      "breakpoints": true
-    }
-  ]
+		{
+			"idx": 13,
+			"version": "6",
+			"when": 1784100000008,
+			"tag": "0013_rename_branches_to_locations",
+			"breakpoints": true
+		},
+		{
+			"idx": 14,
+			"version": "6",
+			"when": 1784100000009,
+			"tag": "0014_rename_affiliates_to_branches",
+			"breakpoints": true
+		}
+	]
 }

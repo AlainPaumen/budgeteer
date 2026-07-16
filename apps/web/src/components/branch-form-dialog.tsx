@@ -1,6 +1,7 @@
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { toast } from "sonner";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,14 +17,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { eden } from "@/lib/api";
 
-const affiliateSchema = z.object({
+const branchSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
 	notes: z.string().max(1000).nullable(),
 });
 
-type FormValues = z.infer<typeof affiliateSchema>;
+type FormValues = z.infer<typeof branchSchema>;
 
-interface Affiliate {
+interface Branch {
 	id: number;
 	name: string;
 	notes: string | null;
@@ -34,55 +35,61 @@ interface Affiliate {
 	updatedAt: number;
 }
 
-interface AffiliateFormDialogProps {
+interface BranchFormDialogProps {
 	open: boolean;
-	onOpenChange: (open: boolean) => void;
-	affiliate?: Affiliate | null;
+	onClose: () => void;
+	branch?: Branch | null;
 }
 
-export function AffiliateFormDialog({
+export function BranchFormDialog({
 	open,
-	onOpenChange,
-	affiliate,
-}: AffiliateFormDialogProps) {
+	onClose,
+	branch,
+}: BranchFormDialogProps) {
 	const queryClient = useQueryClient();
-	const isEditing = !!affiliate;
+	const isEditing = !!branch;
 
 	const defaultValues: FormValues = {
-		name: affiliate?.name ?? "",
-		notes: affiliate?.notes ?? "",
+		name: branch?.name ?? "",
+		notes: branch?.notes ?? "",
 	};
 
 	const createMutation = useMutation({
 		mutationFn: async (data: { name: string; notes?: string | null }) => {
-			const res = await eden.api.affiliates.post(data);
+			const res = await eden.api.branches.post(data);
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["affiliates"] });
-			onOpenChange(false);
+			queryClient.invalidateQueries({ queryKey: ["branches"] });
+			toast.success("Branch created");
+			onClose();
+		},
+		onError: () => {
+			toast.error("Failed to create branch");
 		},
 	});
 
 	const updateMutation = useMutation({
 		mutationFn: async (data: { name?: string; notes?: string | null }) => {
-			const res = await eden.api
-				.affiliates({ id: affiliate?.id ?? 0 })
-				.patch(data);
+			const res = await eden.api.branches({ id: branch?.id ?? 0 }).patch(data);
 			if (res.error) throw res.error;
 			return res.data;
 		},
 		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ["affiliates"] });
-			onOpenChange(false);
+			queryClient.invalidateQueries({ queryKey: ["branches"] });
+			toast.success("Branch updated");
+			onClose();
+		},
+		onError: () => {
+			toast.error("Failed to update branch");
 		},
 	});
 
 	const form = useForm({
 		defaultValues,
 		validators: {
-			onSubmit: affiliateSchema,
+			onSubmit: branchSchema,
 		},
 		onSubmit: async ({ value }) => {
 			const data = {
@@ -105,27 +112,25 @@ export function AffiliateFormDialog({
 		}
 	}, [open]);
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: affiliate?.id triggers re-populate
+	// biome-ignore lint/correctness/useExhaustiveDependencies: branch?.id triggers re-populate
 	useEffect(() => {
 		if (open) {
-			form.setFieldValue("name", affiliate?.name ?? "");
-			form.setFieldValue("notes", affiliate?.notes ?? "");
+			form.setFieldValue("name", branch?.name ?? "");
+			form.setFieldValue("notes", branch?.notes ?? "");
 		}
-	}, [open, affiliate?.id, form]);
+	}, [open, branch?.id, form]);
 
 	const error = createMutation.error || updateMutation.error;
 
 	return (
-		<Dialog open={open} onOpenChange={onOpenChange}>
+		<Dialog open={open} onOpenChange={onClose}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>
-						{isEditing ? "Edit Affiliate" : "Add Affiliate"}
-					</DialogTitle>
+					<DialogTitle>{isEditing ? "Edit Branch" : "Add Branch"}</DialogTitle>
 					<DialogDescription>
 						{isEditing
-							? "Update the affiliate details below."
-							: "Enter the details for the new affiliate."}
+							? "Update the branch details below."
+							: "Enter the details for the new branch."}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -143,7 +148,7 @@ export function AffiliateFormDialog({
 				)}
 
 				<form
-					key={affiliate?.id ?? "new"}
+					key={branch?.id ?? "new"}
 					onSubmit={(e) => {
 						e.preventDefault();
 						e.stopPropagation();
@@ -166,7 +171,7 @@ export function AffiliateFormDialog({
 									<Input
 										id="name"
 										name="name"
-										placeholder="e.g. Acme Corp"
+										placeholder="e.g. Main Office, Warehouse 1"
 										value={field.state.value}
 										onBlur={field.handleBlur}
 										onChange={(e) => field.handleChange(e.target.value)}
@@ -201,11 +206,7 @@ export function AffiliateFormDialog({
 					/>
 
 					<DialogFooter>
-						<Button
-							type="button"
-							variant="outline"
-							onClick={() => onOpenChange(false)}
-						>
+						<Button type="button" variant="outline" onClick={() => onClose()}>
 							Cancel
 						</Button>
 						<form.Subscribe
@@ -222,7 +223,7 @@ export function AffiliateFormDialog({
 											: "Creating..."
 										: isEditing
 											? "Save Changes"
-											: "Create Affiliate"}
+											: "Create Branch"}
 								</Button>
 							)}
 						/>

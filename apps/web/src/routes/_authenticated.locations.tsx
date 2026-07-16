@@ -29,7 +29,7 @@ export const Route = createFileRoute("/_authenticated/locations")({
 	component: LocationsPage,
 });
 
-interface Affiliate {
+interface Branch {
 	id: number;
 	name: string;
 }
@@ -38,7 +38,7 @@ interface Location {
 	id: number;
 	name: string;
 	notes: string | null;
-	affiliateId: number | null;
+	branchId: number | null;
 	isActive: boolean;
 	createdBy: string;
 	createdAt: number;
@@ -95,20 +95,20 @@ function LocationsPage() {
 		},
 	});
 
-	const { data: affiliates = [] } = useQuery({
-		queryKey: ["affiliates"],
+	const { data: branches = [] } = useQuery({
+		queryKey: ["branches"],
 		queryFn: async () => {
-			const res = await eden.api.affiliates.get({
+			const res = await eden.api.branches.get({
 				query: { limit: "100" },
 			});
 			if (res.error) throw res.error;
-			return (res.data as unknown as { data: Affiliate[] }).data;
+			return (res.data as unknown as { data: Branch[] }).data;
 		},
 	});
 
-	const affiliateMap = useMemo(
-		() => new Map(affiliates.map((a) => [a.id, a.name])),
-		[affiliates],
+	const branchMap = useMemo(
+		() => new Map(branches.map((b) => [b.id, b.name])),
+		[branches],
 	);
 
 	const locations = data?.data ?? [];
@@ -183,7 +183,7 @@ function LocationsPage() {
 										)}
 									</button>
 								</TableHead>
-								<TableHead>Affiliate</TableHead>
+								<TableHead>Branch</TableHead>
 								<TableHead>Notes</TableHead>
 								<TableHead className="w-24">Actions</TableHead>
 							</TableRow>
@@ -193,9 +193,9 @@ function LocationsPage() {
 								<TableRow key={location.id}>
 									<TableCell className="font-medium">{location.name}</TableCell>
 									<TableCell className="text-muted-foreground">
-										{location.affiliateId
-											? (affiliateMap.get(location.affiliateId) ??
-												`Affiliate #${location.affiliateId}`)
+										{location.branchId
+											? (branchMap.get(location.branchId) ??
+												`Branch #${location.branchId}`)
 											: "—"}
 									</TableCell>
 									<TableCell className="text-muted-foreground">

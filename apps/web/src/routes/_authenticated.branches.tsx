@@ -10,8 +10,8 @@ import {
 	Trash2Icon,
 } from "lucide-react";
 import { useState } from "react";
-import { AffiliateFormDialog } from "@/components/affiliate-form-dialog";
-import { DeleteAffiliateDialog } from "@/components/delete-affiliate-dialog";
+import { BranchFormDialog } from "@/components/branch-form-dialog";
+import { DeleteBranchDialog } from "@/components/delete-branch-dialog";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -25,11 +25,11 @@ import {
 } from "@/components/ui/table";
 import { eden } from "@/lib/api";
 
-export const Route = createFileRoute("/_authenticated/affiliates")({
-	component: AffiliatesPage,
+export const Route = createFileRoute("/_authenticated/branches")({
+	component: BranchesPage,
 });
 
-interface Affiliate {
+interface Branch {
 	id: number;
 	name: string;
 	notes: string | null;
@@ -40,8 +40,8 @@ interface Affiliate {
 	updatedAt: number;
 }
 
-interface AffiliatesResponse {
-	data: Affiliate[];
+interface BranchesResponse {
+	data: Branch[];
 	pagination: {
 		page: number;
 		limit: number;
@@ -50,20 +50,16 @@ interface AffiliatesResponse {
 	};
 }
 
-function AffiliatesPage() {
+function BranchesPage() {
 	const [page, setPage] = useState(1);
 	const [search, setSearch] = useState("");
 	const [debouncedSearch, setDebouncedSearch] = useState("");
 	const [order, setOrder] = useState<"asc" | "desc">("asc");
 	const [showInactive, setShowInactive] = useState(false);
 	const [formOpen, setFormOpen] = useState(false);
-	const [editingAffiliate, setEditingAffiliate] = useState<Affiliate | null>(
-		null,
-	);
+	const [editingBranch, setEditingBranch] = useState<Branch | null>(null);
 	const [deleteOpen, setDeleteOpen] = useState(false);
-	const [deletingAffiliate, setDeletingAffiliate] = useState<Affiliate | null>(
-		null,
-	);
+	const [deletingBranch, setDeletingBranch] = useState<Branch | null>(null);
 
 	const handleSearchChange = (value: string) => {
 		setSearch(value);
@@ -73,7 +69,7 @@ function AffiliatesPage() {
 
 	const { data, isLoading } = useQuery({
 		queryKey: [
-			"affiliates",
+			"branches",
 			{ page, search: debouncedSearch, order, showInactive },
 		],
 		queryFn: async () => {
@@ -85,27 +81,27 @@ function AffiliatesPage() {
 			};
 			if (!showInactive) params.is_active = "true";
 			if (debouncedSearch) params.search = debouncedSearch;
-			const res = await eden.api.affiliates.get({ query: params });
+			const res = await eden.api.branches.get({ query: params });
 			if (res.error) throw res.error;
-			return res.data as unknown as AffiliatesResponse;
+			return res.data as unknown as BranchesResponse;
 		},
 	});
 
-	const affiliates = data?.data ?? [];
+	const branches = data?.data ?? [];
 	const pagination = data?.pagination;
 
 	return (
 		<div className="space-y-4">
 			<div className="flex items-center justify-between">
-				<h1 className="text-2xl font-bold">Affiliates</h1>
+				<h1 className="text-2xl font-bold">Branches</h1>
 				<Button
 					onClick={() => {
-						setEditingAffiliate(null);
+						setEditingBranch(null);
 						setFormOpen(true);
 					}}
 				>
 					<PlusIcon className="mr-2 size-4" />
-					Add Affiliate
+					Add Branch
 				</Button>
 			</div>
 
@@ -113,7 +109,7 @@ function AffiliatesPage() {
 				<div className="relative max-w-sm">
 					<SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
 					<Input
-						placeholder="Search affiliates..."
+						placeholder="Search branches..."
 						className="pl-8"
 						value={search}
 						onChange={(e) => handleSearchChange(e.target.value)}
@@ -134,13 +130,13 @@ function AffiliatesPage() {
 
 			{isLoading ? (
 				<div className="py-12 text-center text-sm text-muted-foreground">
-					Loading affiliates...
+					Loading branches...
 				</div>
-			) : affiliates.length === 0 ? (
+			) : branches.length === 0 ? (
 				<div className="py-12 text-center text-sm text-muted-foreground">
 					{debouncedSearch
-						? "No affiliates match your search."
-						: "No affiliates yet. Add your first affiliate to get started."}
+						? "No branches match your search."
+						: "No branches yet. Add your first branch to get started."}
 				</div>
 			) : (
 				<>
@@ -168,13 +164,11 @@ function AffiliatesPage() {
 							</TableRow>
 						</TableHeader>
 						<TableBody>
-							{affiliates.map((affiliate) => (
-								<TableRow key={affiliate.id}>
-									<TableCell className="font-medium">
-										{affiliate.name}
-									</TableCell>
+							{branches.map((branch) => (
+								<TableRow key={branch.id}>
+									<TableCell className="font-medium">{branch.name}</TableCell>
 									<TableCell className="text-muted-foreground">
-										{affiliate.notes || "—"}
+										{branch.notes || "—"}
 									</TableCell>
 									<TableCell>
 										<div className="flex gap-1">
@@ -182,7 +176,7 @@ function AffiliatesPage() {
 												variant="ghost"
 												size="icon-sm"
 												onClick={() => {
-													setEditingAffiliate(affiliate);
+													setEditingBranch(branch);
 													setFormOpen(true);
 												}}
 											>
@@ -192,11 +186,11 @@ function AffiliatesPage() {
 												variant="ghost"
 												size="icon-sm"
 												onClick={() => {
-													setDeletingAffiliate(affiliate);
+													setDeletingBranch(branch);
 													setDeleteOpen(true);
 												}}
 											>
-												{affiliate.isActive ? (
+												{branch.isActive ? (
 													<Trash2Icon className="size-4" />
 												) : (
 													<RotateCcwIcon className="size-4" />
@@ -238,19 +232,19 @@ function AffiliatesPage() {
 				</>
 			)}
 
-			<AffiliateFormDialog
+			<BranchFormDialog
 				open={formOpen}
-				onOpenChange={setFormOpen}
-				affiliate={editingAffiliate}
+				onClose={() => setFormOpen(false)}
+				branch={editingBranch}
 			/>
 
-			{deletingAffiliate && (
-				<DeleteAffiliateDialog
+			{deletingBranch && (
+				<DeleteBranchDialog
 					open={deleteOpen}
 					onOpenChange={setDeleteOpen}
-					affiliateId={deletingAffiliate.id}
-					affiliateName={deletingAffiliate.name}
-					isActive={deletingAffiliate.isActive}
+					branchId={deletingBranch.id}
+					branchName={deletingBranch.name}
+					isActive={deletingBranch.isActive}
 				/>
 			)}
 		</div>
