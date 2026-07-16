@@ -111,6 +111,23 @@ This will:
 2. Build the API container
 3. Start all services
 
+### Updating
+
+After pushing to main:
+
+```bash
+./docker-deploy.sh
+```
+
+Options:
+- `--no-cache` — rebuild without Docker cache
+- `--logs` — tail logs after deploy
+
+```bash
+# Full rebuild, then tail logs
+./docker-deploy.sh --no-cache --logs
+```
+
 ### Check status
 
 ```bash
@@ -129,17 +146,6 @@ curl -i https://your-domain.com/api/health
 docker compose logs api
 docker compose logs caddy
 ```
-
-## Updating
-
-After pushing to main:
-
-```bash
-git pull origin main
-docker compose up -d --build
-```
-
-Caddy will automatically pick up changes.
 
 ## Common commands
 
