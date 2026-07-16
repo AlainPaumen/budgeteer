@@ -536,63 +536,129 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 				className="space-y-6"
 			>
 				<div className="space-y-4">
-					<h2 className="text-lg font-semibold">Supplier</h2>
-					<form.Field
-						name="supplier_id"
-						// biome-ignore lint/correctness/noChildrenProp: TanStack Form render prop
-						children={(field) => {
-							const isInvalid =
-								field.state.meta.isTouched && !field.state.meta.isValid;
-							return (
-								<Field data-invalid={isInvalid || !!invoiceErrors.supplier_id}>
-									<FieldLabel htmlFor="supplier_id" className="required">
-										Supplier
-									</FieldLabel>
-									<Select
-										value={field.state.value ? String(field.state.value) : ""}
-										onValueChange={(value) => {
-											const numValue = Number(value);
-											field.handleChange(numValue);
-											setSelectedSupplierId(numValue);
-											if (invoiceErrors.supplier_id) {
-												setInvoiceErrors((prev) => {
-													const next = { ...prev };
-													delete next.supplier_id;
-													return next;
-												});
-											}
-										}}
-										items={suppliers.map((s) => ({
-											value: String(s.id),
-											label: s.name,
-										}))}
+					<div className="grid grid-cols-2 gap-4">
+						<form.Field
+							name="supplier_id"
+							// biome-ignore lint/correctness/noChildrenProp: TanStack Form render prop
+							children={(field) => {
+								const isInvalid =
+									field.state.meta.isTouched && !field.state.meta.isValid;
+								return (
+									<Field
+										data-invalid={isInvalid || !!invoiceErrors.supplier_id}
 									>
-										<SelectTrigger
-											className="w-full"
-											aria-invalid={isInvalid || !!invoiceErrors.supplier_id}
+										<FieldLabel htmlFor="supplier_id" className="required">
+											Supplier
+										</FieldLabel>
+										<Select
+											value={field.state.value ? String(field.state.value) : ""}
+											onValueChange={(value) => {
+												const numValue = Number(value);
+												field.handleChange(numValue);
+												setSelectedSupplierId(numValue);
+												if (invoiceErrors.supplier_id) {
+													setInvoiceErrors((prev) => {
+														const next = { ...prev };
+														delete next.supplier_id;
+														return next;
+													});
+												}
+											}}
+											items={suppliers.map((s) => ({
+												value: String(s.id),
+												label: s.name,
+											}))}
 										>
-											<SelectValue placeholder="Select a supplier" />
-										</SelectTrigger>
-										<SelectContent>
-											{suppliers.map((supplier) => (
-												<SelectItem
-													key={supplier.id}
-													value={String(supplier.id)}
-												>
-													{supplier.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-									{invoiceErrors.supplier_id && (
-										<p className="text-xs text-destructive">
-											{invoiceErrors.supplier_id}
-										</p>
-									)}
-								</Field>
-							);
-						}}
-					/>
+											<SelectTrigger
+												className="w-full"
+												aria-invalid={isInvalid || !!invoiceErrors.supplier_id}
+											>
+												<SelectValue placeholder="Select a supplier" />
+											</SelectTrigger>
+											<SelectContent>
+												{suppliers.map((supplier) => (
+													<SelectItem
+														key={supplier.id}
+														value={String(supplier.id)}
+													>
+														{supplier.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+										{invoiceErrors.supplier_id && (
+											<p className="text-xs text-destructive">
+												{invoiceErrors.supplier_id}
+											</p>
+										)}
+									</Field>
+								);
+							}}
+						/>
+
+						<form.Field
+							name="branch_id"
+							// biome-ignore lint/correctness/noChildrenProp: TanStack Form render prop
+							children={(field) => {
+								const isInvalid =
+									field.state.meta.isTouched && !field.state.meta.isValid;
+								return (
+									<Field data-invalid={isInvalid || !!invoiceErrors.branch_id}>
+										<FieldLabel htmlFor="branch_id" className="required">
+											Branch
+										</FieldLabel>
+										<Select
+											value={field.state.value ? String(field.state.value) : ""}
+											onValueChange={(value) => {
+												const numValue = Number(value);
+												field.handleChange(numValue);
+												setSelectedBranchId(numValue);
+												// Clear locations on all invoice lines when branch changes
+												const currentLines = form.getFieldValue("lines");
+												const updatedLines = currentLines.map(
+													(line: InvoiceLineFormValues) => ({
+														...line,
+														location_id: null,
+													}),
+												);
+												form.setFieldValue("lines", updatedLines);
+												if (invoiceErrors.branch_id) {
+													setInvoiceErrors((prev) => {
+														const next = { ...prev };
+														delete next.branch_id;
+														return next;
+													});
+												}
+											}}
+											items={branches.map((b) => ({
+												value: String(b.id),
+												label: b.name,
+											}))}
+										>
+											<SelectTrigger
+												className="w-full"
+												aria-invalid={isInvalid || !!invoiceErrors.branch_id}
+											>
+												<SelectValue placeholder="Select a branch" />
+											</SelectTrigger>
+											<SelectContent>
+												{branches.map((branch) => (
+													<SelectItem key={branch.id} value={String(branch.id)}>
+														{branch.name}
+													</SelectItem>
+												))}
+											</SelectContent>
+										</Select>
+										{invoiceErrors.branch_id && (
+											<p className="text-xs text-destructive">
+												{invoiceErrors.branch_id}
+											</p>
+										)}
+									</Field>
+								);
+							}}
+						/>
+					</div>
 
 					{selectedSupplierId > 0 && (
 						<div className="space-y-2">
@@ -679,72 +745,6 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 							)}
 						</div>
 					)}
-				</div>
-
-				<div className="space-y-4">
-					<h2 className="text-lg font-semibold">Branch</h2>
-					<form.Field
-						name="branch_id"
-						// biome-ignore lint/correctness/noChildrenProp: TanStack Form render prop
-						children={(field) => {
-							const isInvalid =
-								field.state.meta.isTouched && !field.state.meta.isValid;
-							return (
-								<Field data-invalid={isInvalid || !!invoiceErrors.branch_id}>
-									<FieldLabel htmlFor="branch_id" className="required">
-										Branch
-									</FieldLabel>
-									<Select
-										value={field.state.value ? String(field.state.value) : ""}
-										onValueChange={(value) => {
-											const numValue = Number(value);
-											field.handleChange(numValue);
-											setSelectedBranchId(numValue);
-											// Clear locations on all invoice lines when branch changes
-											const currentLines = form.getFieldValue("lines");
-											const updatedLines = currentLines.map(
-												(line: InvoiceLineFormValues) => ({
-													...line,
-													location_id: null,
-												}),
-											);
-											form.setFieldValue("lines", updatedLines);
-											if (invoiceErrors.branch_id) {
-												setInvoiceErrors((prev) => {
-													const next = { ...prev };
-													delete next.branch_id;
-													return next;
-												});
-											}
-										}}
-										items={branches.map((b) => ({
-											value: String(b.id),
-											label: b.name,
-										}))}
-									>
-										<SelectTrigger
-											className="w-full"
-											aria-invalid={isInvalid || !!invoiceErrors.branch_id}
-										>
-											<SelectValue placeholder="Select a branch" />
-										</SelectTrigger>
-										<SelectContent>
-											{branches.map((branch) => (
-												<SelectItem key={branch.id} value={String(branch.id)}>
-													{branch.name}
-												</SelectItem>
-											))}
-										</SelectContent>
-									</Select>
-									{invoiceErrors.branch_id && (
-										<p className="text-xs text-destructive">
-											{invoiceErrors.branch_id}
-										</p>
-									)}
-								</Field>
-							);
-						}}
-					/>
 				</div>
 
 				<div className="space-y-4">
@@ -1025,7 +1025,66 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 														</div>
 													)}
 
-												<div className="grid grid-cols-2 gap-2">
+												<div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-end">
+													<Field>
+														<FieldLabel>Location</FieldLabel>
+														<div className="flex gap-1">
+															<Select
+																value={
+																	line.location_id
+																		? String(line.location_id)
+																		: ""
+																}
+																onValueChange={(value) => {
+																	const lines = form.getFieldValue("lines");
+																	const updatedLines = [...lines];
+																	updatedLines[index] = {
+																		...updatedLines[index],
+																		location_id: value ? Number(value) : null,
+																	};
+																	form.setFieldValue("lines", updatedLines);
+																}}
+																items={locations.map((l) => ({
+																	value: String(l.id),
+																	label: l.name,
+																}))}
+															>
+																<SelectTrigger className="w-full">
+																	<SelectValue placeholder="Location (optional)" />
+																</SelectTrigger>
+																<SelectContent>
+																	{locations.map((location) => (
+																		<SelectItem
+																			key={location.id}
+																			value={String(location.id)}
+																		>
+																			{location.name}
+																		</SelectItem>
+																	))}
+																</SelectContent>
+															</Select>
+															{line.location_id && (
+																<Button
+																	type="button"
+																	variant="ghost"
+																	size="icon-sm"
+																	onClick={() => {
+																		const lines = form.getFieldValue("lines");
+																		const updatedLines = [...lines];
+																		updatedLines[index] = {
+																			...updatedLines[index],
+																			location_id: null,
+																		};
+																		form.setFieldValue("lines", updatedLines);
+																	}}
+																	className="shrink-0"
+																>
+																	<Trash2Icon className="size-3" />
+																</Button>
+															)}
+														</div>
+													</Field>
+
 													<Field>
 														<FieldLabel>Start Date</FieldLabel>
 														<DatePicker
@@ -1234,41 +1293,6 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 																		value={String(costType.id)}
 																	>
 																		{costType.name}
-																	</SelectItem>
-																))}
-															</SelectContent>
-														</Select>
-													</Field>
-
-													<Field>
-														<Select
-															value={
-																line.location_id ? String(line.location_id) : ""
-															}
-															onValueChange={(value) => {
-																const lines = form.getFieldValue("lines");
-																const updatedLines = [...lines];
-																updatedLines[index] = {
-																	...updatedLines[index],
-																	location_id: value ? Number(value) : null,
-																};
-																form.setFieldValue("lines", updatedLines);
-															}}
-															items={locations.map((l) => ({
-																value: String(l.id),
-																label: l.name,
-															}))}
-														>
-															<SelectTrigger className="w-full">
-																<SelectValue placeholder="Location (optional)" />
-															</SelectTrigger>
-															<SelectContent>
-																{locations.map((location) => (
-																	<SelectItem
-																		key={location.id}
-																		value={String(location.id)}
-																	>
-																		{location.name}
 																	</SelectItem>
 																))}
 															</SelectContent>
