@@ -1,183 +1,158 @@
-# ⚡ Bun, Elysia, & TanStack Monorepo
+# Budgeteer
 
-A bleeding-edge, end-to-end type-safe monorepo template built for performance. It features a compiled backend engine running natively on Bun paired with a fully type-safe React frontend orchestrated by the TanStack ecology.
+Invoice tracking and budget management application.
 
-## 🚀 Tech Stack
+## Tech Stack
 
-### Frontend (`apps/web`)
-* **Core**: Vite + React + TypeScript + Tailwind v4
-* **Routing**: TanStack Router (File-based, 100% type-safe routing)
-* **Data Fetching**: TanStack Query (Interfaced with Elysia Eden Treaty)
-* **Forms & Tables**: TanStack Form + TanStack Table
-* **UI Components**: Shadcn UI built on Base UI (`@base-ui-components/react`) primitives
+- **Runtime:** Bun
+- **Backend:** Elysia + Drizzle ORM + SQLite
+- **Frontend:** React 19 + TanStack Router/Query/Form + Vite + Tailwind CSS v4
+- **UI:** Shadcn UI (Base UI primitives)
+- **Auth:** better-auth (email/password)
 
-### Backend (`apps/api`)
-* **Runtime**: Bun (Native Zig engine)
-* **Framework**: Elysia (Fast, lightweight, E2E type-safe)
-* **Database**: Embedded SQLite via native `bun:sqlite`
-
----
-
-## 📂 Workspace Architecture
-
-```text
-my-app/
-├── .husky/            # Git pre-commit automation hooks
-├── apps/
-│   ├── web/           # Vite React application (Port 5173)
-│   └── api/           # Elysia backend server (Port 3000)
-├── packages/
-│   └── api-types/     # Direct type-bridge exporting server schemas to frontend
-├── AGENTS.md          # Rules and instructions for AI agents (Cursor, Copilot)
-└── package.json       # Workspace coordination root
-```
-
----
-
-## 🛠️ Step-by-Step Husky Setup
-
-To ensure bad code, layout breaks, or broken types never make it into Git, execute these precise setup commands from your **root directory**:
+## Development
 
 ```bash
-# 1. Install Husky and Lint-Staged as devDependencies in the root
-bun add husky lint-staged --dev
-
-# 2. Initialize Husky (This generates the local .husky directory infrastructure)
-bun run prepare
-
-# 3. Create the pre-commit hook file and pipe the lint-staged command into it
-echo "bun x lint-staged" > .husky/pre-commit
-
-# 4. Grant execution permissions to the hook file (Crucial for macOS/Linux systems)
-chmod +x .husky/pre-commit
-```
-
----
-
-## ⚙️ Configuration File Guide
-
-This monorepo relies on specific structural configuration files to map path aliases, automate scripts, and bridge types seamlessly.
-
-### 1. Root Orchestration (`/package.json`)
-The root file maps workspaces, defines multi-app concurrent boot commands, and routes files to `lint-staged`:
-```json
-{
-  "name": "my-app-monorepo",
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
-  "scripts": {
-    "dev:web": "bun --filter web dev",
-    "dev:api": "bun --filter api dev",
-    "dev": "bun run dev:api & bun run dev:web",
-    "prepare": "husky"
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "bun x biome check --write",
-      "bun --filter web exec tsc --noEmit",
-      "bun --filter api exec tsc --noEmit"
-    ]
-  }
-}
-```
-
-### 2. Frontend Compiling & Path Aliases (`/apps/web/tsconfig.json`)
-Configures the TypeScript compiler to resolve native paths using clean `@/*` patterns:
-```json
-{
-  "compilerOptions": {
-    "target": "ES2022",
-    "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ES2022"],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
-  },
-  "include": ["src"]
-}
-```
-
-### 3. Frontend Bundler Mapping (`/apps/web/vite.config.ts`)
-Instructs Vite and Tailwind v4 exactly how to compile your alias layout during development builds:
-```typescript
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
-import tailwindcss from '@tailwindcss/vite';
-import path from 'path';
-
-export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
-});
-```
-
-### 4. Cross-Boundary Type Bridge (`/packages/api-types/package.json`)
-Bridges your server exports directly over to your React hooks using standard workspace links, bypassing the need for heavy REST codegen:
-```json
-{
-  "name": "@my-app/api-types",
-  "version": "1.0.0",
-  "exports": {
-    ".": "../../apps/api/src/index.ts"
-  }
-}
-```
-
----
-
-## 💻 Workspace Management Commands
-
-Always execute script operations from the **root directory** using Bun's `--filter` flag to keep your workspace contexts distinct.
-
-### Dependency Operations
-```bash
-# Add a third-party dependency to the web app only
-bun add <package-name> --filter web
-
-# Add a devDependency to the API server only
-bun add <package-name> --dev --filter api
-```
-
-### Direct Script Execution
-```bash
-# Run only the Vite development workspace
-bun run dev:web
-
-# Run only the Elysia backend environment
-bun run dev:api
-
-# Run the complete environment concurrently
+bun install
 bun run dev
 ```
 
----
+Frontend: http://localhost:5173
+API: http://localhost:3000
 
-## 🛡️ Code Quality & Pre-Commit Automation
+## Environment Variables
 
-When you trigger a `git commit`, Husky intercepts the action and initiates `lint-staged`. The system automatically checks and formats your changes in parallel:
-1. **Biome Check**: Formats and fixes styling errors on modified `ts` and `tsx` source files using a high-performance Rust runner.
-2. **Frontend Type Check**: Runs a sterile `tsc --noEmit` validation across the web application.
-3. **Backend Type Check**: Runs a sterile `tsc --noEmit` validation across the API application.
+Copy `.env.example` to `.env` and configure:
 
-> 💡 *If you want to manually run a type check without committing code, execute: `bun --filter web exec tsc --noEmit`*
+| Variable | Required | Default | Description |
+|---|---|---|---|
+| `PORT` | No | `3000` | API server port |
+| `FRONTEND_URL` | Yes | - | CORS origin (e.g. `https://budgeteer.example.com`) |
+| `BETTER_AUTH_SECRET` | Yes | - | Secret for session signing (generate with `openssl rand -base64 32`) |
+| `VITE_API_URL` | No | `http://localhost:3000` | API URL the frontend connects to |
+| `VITE_DATE_FORMAT` | No | `YYYY-MM-DD` | Display date format |
 
+## Build
+
+```bash
+bun run build    # builds frontend to apps/web/dist/
+bun run start    # starts API server
+```
+
+## VPS Deployment (Caddy)
+
+### Prerequisites
+
+- Ubuntu 22.04+ VPS
+- Domain pointed to your VPS IP
+- SSH access as root or sudo user
+
+### 1. Install Bun
+
+```bash
+curl -fsSL https://bun.sh/install | bash
+source ~/.bashrc
+```
+
+### 2. Install Caddy
+
+```bash
+sudo apt update
+sudo apt install -y caddy
+```
+
+### 3. Clone and configure
+
+```bash
+sudo mkdir -p /opt/budgeteer
+sudo chown $USER /opt/budgeteer
+git clone <your-repo-url> /opt/budgeteer
+cd /opt/budgeteer
+```
+
+### 4. Create `.env`
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` with production values:
+
+```bash
+PORT=3000
+FRONTEND_URL=https://budgeteer.example.com
+BETTER_AUTH_SECRET=$(openssl rand -base64 32)
+VITE_API_URL=https://budgeteer.example.com
+```
+
+### 5. Build frontend
+
+```bash
+bun install
+bun run build
+```
+
+### 6. Configure Caddy
+
+```bash
+sudo cp Caddyfile /etc/caddy/Caddyfile
+```
+
+Edit `/etc/caddy/Caddyfile` — replace `budgeteer.example.com` with your domain.
+
+```bash
+sudo systemctl reload caddy
+```
+
+### 7. Configure systemd service
+
+```bash
+sudo cp budgeteer.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now budgeteer
+```
+
+### 8. Verify
+
+```bash
+# Check API is running
+sudo systemctl status budgeteer
+
+# Check Caddy is serving
+curl -I https://budgeteer.example.com/api/health
+```
+
+### Deploy updates
+
+After pushing to main:
+
+```bash
+./deploy.sh
+```
+
+This pulls latest code, rebuilds the frontend, and restarts the API.
+
+## Project Structure
+
+```
+budgeteer/
+├── apps/
+│   ├── api/              # Elysia backend
+│   │   ├── src/
+│   │   │   ├── routes/   # API route handlers
+│   │   │   ├── db/       # Schema, migrations
+│   │   │   ├── auth.ts   # better-auth config
+│   │   │   └── index.ts  # Server entry
+│   │   └── data/         # SQLite database (gitignored)
+│   └── web/              # React frontend
+│       ├── src/
+│       │   ├── routes/   # TanStack Router pages
+│       │   ├── components/
+│       │   └── lib/      # API client, utils
+│       └── dist/         # Build output (gitignored)
+├── packages/
+│   └── api-types/        # End-to-end type safety
+├── Caddyfile             # Caddy reverse proxy config
+├── budgeteer.service     # systemd service
+└── deploy.sh             # Deploy script
+```
