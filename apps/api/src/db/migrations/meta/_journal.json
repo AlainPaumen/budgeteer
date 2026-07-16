@@ -106,6 +106,13 @@
 			"when": 1784100000009,
 			"tag": "0014_rename_affiliates_to_branches",
 			"breakpoints": true
+		},
+		{
+			"idx": 15,
+			"version": "6",
+			"when": 1784100000010,
+			"tag": "0015_add_branch_to_invoices_and_location_to_lines",
+			"breakpoints": true
 		}
 	]
 }

@@ -18,10 +18,12 @@ const invoiceLineSchema = z.object({
 	service_id: z.number().int().positive("Service is required"),
 	category_id: z.number().int().positive("Category is required"),
 	cost_type_id: z.number().int().positive("Cost type is required"),
+	location_id: z.number().int().positive().nullable().optional(),
 });
 
 const createInvoiceSchema = z.object({
 	supplier_id: z.number().int().positive("Supplier is required"),
+	branch_id: z.number().int().positive("Branch is required"),
 	invoice_date: z.string().min(1, "Invoice date is required"),
 	invoice_number: z.string().min(1, "Invoice number is required").max(100),
 	lines: z
@@ -31,6 +33,7 @@ const createInvoiceSchema = z.object({
 
 const updateInvoiceSchema = z.object({
 	supplier_id: z.number().int().positive("Supplier is required").optional(),
+	branch_id: z.number().int().positive("Branch is required").optional(),
 	invoice_date: z.string().optional(),
 	invoice_number: z
 		.string()
@@ -162,6 +165,7 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 				return {
 					id: invoice.id,
 					supplierId: invoice.supplierId,
+					branchId: invoice.branchId,
 					invoiceDate: invoice.invoiceDate,
 					invoiceNumber: invoice.invoiceNumber,
 					createdBy: invoice.createdBy,
@@ -240,7 +244,8 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 			);
 		}
 
-		const { supplier_id, invoice_date, invoice_number, lines } = parsed.data;
+		const { supplier_id, branch_id, invoice_date, invoice_number, lines } =
+			parsed.data;
 
 		const existing = await db
 			.select({ id: invoices.id })
@@ -262,6 +267,7 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 			.insert(invoices)
 			.values({
 				supplierId: supplier_id,
+				branchId: branch_id,
 				invoiceDate: invoiceDate,
 				invoiceNumber: invoice_number,
 				createdBy: userId,
@@ -288,6 +294,7 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 						serviceId: line.service_id,
 						categoryId: line.category_id,
 						costTypeId: line.cost_type_id,
+						locationId: line.location_id ?? null,
 						createdBy: userId,
 						createdAt: now,
 						updatedBy: userId,
@@ -341,7 +348,8 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 			});
 		}
 
-		const { supplier_id, invoice_date, invoice_number, lines } = parsed.data;
+		const { supplier_id, branch_id, invoice_date, invoice_number, lines } =
+			parsed.data;
 
 		if (invoice_number && invoice_number !== existing[0].invoiceNumber) {
 			const numberTaken = await db
@@ -366,6 +374,7 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 			.update(invoices)
 			.set({
 				...(supplier_id !== undefined && { supplierId: supplier_id }),
+				...(branch_id !== undefined && { branchId: branch_id }),
 				...(invoice_date !== undefined && {
 					invoiceDate: new Date(invoice_date),
 				}),
@@ -393,6 +402,7 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 						serviceId: line.service_id,
 						categoryId: line.category_id,
 						costTypeId: line.cost_type_id,
+						locationId: line.location_id ?? null,
 						createdBy: userId,
 						createdAt: now,
 						updatedBy: userId,

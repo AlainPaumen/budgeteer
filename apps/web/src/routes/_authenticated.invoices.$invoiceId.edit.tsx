@@ -21,6 +21,7 @@ interface InvoiceLine {
 	serviceId: number;
 	categoryId: number;
 	costTypeId: number;
+	locationId: number | null;
 	createdBy: string;
 	createdAt: number;
 	updatedBy: string;
@@ -30,6 +31,7 @@ interface InvoiceLine {
 interface Invoice {
 	id: number;
 	supplierId: number;
+	branchId: number;
 	invoiceDate: number;
 	invoiceNumber: string;
 	createdBy: string;
@@ -73,6 +75,7 @@ function InvoiceEditPage() {
 
 	const initialData = {
 		supplierId: invoice.supplierId,
+		branchId: invoice.branchId,
 		invoiceDate: new Date(invoice.invoiceDate).toISOString().split("T")[0],
 		invoiceNumber: invoice.invoiceNumber,
 		lines: invoice.lines.map((line) => ({
@@ -89,6 +92,7 @@ function InvoiceEditPage() {
 			service_id: line.serviceId,
 			category_id: line.categoryId,
 			cost_type_id: line.costTypeId,
+			location_id: line.locationId,
 		})),
 	};
 

@@ -264,6 +264,9 @@ export const invoices = sqliteTable("invoices", {
 	supplierId: integer("supplier_id")
 		.notNull()
 		.references(() => suppliers.id),
+	branchId: integer("branch_id")
+		.notNull()
+		.references(() => branches.id),
 	invoiceDate: integer("invoice_date", { mode: "timestamp_ms" }).notNull(),
 	invoiceNumber: text("invoice_number").notNull().unique(),
 	createdBy: text("created_by")
@@ -282,6 +285,10 @@ export const invoiceRelations = relations(invoices, ({ one, many }) => ({
 	supplier: one(suppliers, {
 		fields: [invoices.supplierId],
 		references: [suppliers.id],
+	}),
+	branch: one(branches, {
+		fields: [invoices.branchId],
+		references: [branches.id],
 	}),
 	createdByUser: one(user, {
 		fields: [invoices.createdBy],
@@ -314,6 +321,7 @@ export const invoiceLines = sqliteTable("invoice_lines", {
 	costTypeId: integer("cost_type_id")
 		.notNull()
 		.references(() => costTypes.id),
+	locationId: integer("location_id").references(() => locations.id),
 	createdBy: text("created_by")
 		.notNull()
 		.references(() => user.id),
@@ -342,6 +350,10 @@ export const invoiceLineRelations = relations(invoiceLines, ({ one }) => ({
 	costType: one(costTypes, {
 		fields: [invoiceLines.costTypeId],
 		references: [costTypes.id],
+	}),
+	location: one(locations, {
+		fields: [invoiceLines.locationId],
+		references: [locations.id],
 	}),
 	createdByUser: one(user, {
 		fields: [invoiceLines.createdBy],

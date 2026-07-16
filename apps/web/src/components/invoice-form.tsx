@@ -44,11 +44,13 @@ const invoiceLineSchema = z.object({
 	service_id: z.number().int().positive("Service is required"),
 	category_id: z.number().int().positive("Category is required"),
 	cost_type_id: z.number().int().positive("Cost type is required"),
+	location_id: z.number().int().positive().nullable().optional(),
 });
 
 const invoiceSchema = z
 	.object({
 		supplier_id: z.number().int().positive("Supplier is required"),
+		branch_id: z.number().int().positive("Branch is required"),
 		invoice_date: z.string().min(1, "Invoice date is required"),
 		invoice_number: z.string().min(1, "Invoice number is required").max(100),
 		lines: z
@@ -78,6 +80,17 @@ interface Supplier {
 	name: string;
 }
 
+interface Branch {
+	id: number;
+	name: string;
+}
+
+interface Location {
+	id: number;
+	name: string;
+	branchId: number | null;
+}
+
 interface Service {
 	id: number;
 	name: string;
@@ -105,6 +118,7 @@ interface RecentInvoiceLine {
 	serviceId: number;
 	categoryId: number;
 	costTypeId: number;
+	locationId: number | null;
 	createdBy: string;
 	createdAt: number;
 	updatedBy: string;
@@ -114,6 +128,7 @@ interface RecentInvoiceLine {
 interface RecentInvoice {
 	id: number;
 	supplierId: number;
+	branchId: number;
 	invoiceDate: number;
 	invoiceNumber: string;
 	createdBy: string;
@@ -127,6 +142,7 @@ interface InvoiceFormProps {
 	invoiceId?: number;
 	initialData?: {
 		supplierId: number;
+		branchId: number;
 		invoiceDate: string;
 		invoiceNumber: string;
 		lines: InvoiceLineFormValues[];
@@ -143,6 +159,9 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 	>(new Set());
 
 	const [selectedSupplierId, setSelectedSupplierId] = useState<number>(0);
+	const [selectedBranchId, setSelectedBranchId] = useState<number>(
+		initialData?.branchId ?? 0,
+	);
 
 	const [lineErrors, setLineErrors] = useState<
 		Record<number, Record<string, string>>
@@ -161,6 +180,31 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 			if (res.error) throw res.error;
 			return (res.data as unknown as { data: Supplier[] }).data;
 		},
+	});
+
+	const { data: branches = [], error: branchesError } = useQuery({
+		queryKey: ["branches"],
+		queryFn: async () => {
+			const res = await eden.api.branches.get({
+				query: { limit: "100", is_active: "true" },
+			});
+			if (res.error) throw res.error;
+			return (res.data as unknown as { data: Branch[] }).data;
+		},
+	});
+
+	const { data: locations = [], error: locationsError } = useQuery({
+		queryKey: ["locations", selectedBranchId],
+		queryFn: async () => {
+			if (!selectedBranchId) return [];
+			const res = await eden.api.locations.get({
+				query: { limit: "100", is_active: "true" },
+			});
+			if (res.error) throw res.error;
+			const allLocations = (res.data as unknown as { data: Location[] }).data;
+			return allLocations.filter((l) => l.branchId === selectedBranchId);
+		},
+		enabled: !!selectedBranchId,
 	});
 
 	const { data: services = [], error: servicesError } = useQuery({
@@ -198,6 +242,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 
 	const defaultValues: InvoiceFormValues = {
 		supplier_id: initialData?.supplierId ?? 0,
+		branch_id: initialData?.branchId ?? 0,
 		invoice_date: initialData?.invoiceDate ?? "",
 		invoice_number: initialData?.invoiceNumber ?? "",
 		lines: initialData?.lines
@@ -375,6 +420,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 				service_id: line.serviceId,
 				category_id: line.categoryId,
 				cost_type_id: line.costTypeId,
+				location_id: line.locationId ?? null,
 			},
 		]);
 	};
@@ -393,6 +439,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 				service_id: 0,
 				category_id: 0,
 				cost_type_id: 0,
+				location_id: null,
 			},
 		]);
 	};
@@ -632,6 +679,72 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 							)}
 						</div>
 					)}
+				</div>
+
+				<div className="space-y-4">
+					<h2 className="text-lg font-semibold">Branch</h2>
+					<form.Field
+						name="branch_id"
+						// biome-ignore lint/correctness/noChildrenProp: TanStack Form render prop
+						children={(field) => {
+							const isInvalid =
+								field.state.meta.isTouched && !field.state.meta.isValid;
+							return (
+								<Field data-invalid={isInvalid || !!invoiceErrors.branch_id}>
+									<FieldLabel htmlFor="branch_id" className="required">
+										Branch
+									</FieldLabel>
+									<Select
+										value={field.state.value ? String(field.state.value) : ""}
+										onValueChange={(value) => {
+											const numValue = Number(value);
+											field.handleChange(numValue);
+											setSelectedBranchId(numValue);
+											// Clear locations on all invoice lines when branch changes
+											const currentLines = form.getFieldValue("lines");
+											const updatedLines = currentLines.map(
+												(line: InvoiceLineFormValues) => ({
+													...line,
+													location_id: null,
+												}),
+											);
+											form.setFieldValue("lines", updatedLines);
+											if (invoiceErrors.branch_id) {
+												setInvoiceErrors((prev) => {
+													const next = { ...prev };
+													delete next.branch_id;
+													return next;
+												});
+											}
+										}}
+										items={branches.map((b) => ({
+											value: String(b.id),
+											label: b.name,
+										}))}
+									>
+										<SelectTrigger
+											className="w-full"
+											aria-invalid={isInvalid || !!invoiceErrors.branch_id}
+										>
+											<SelectValue placeholder="Select a branch" />
+										</SelectTrigger>
+										<SelectContent>
+											{branches.map((branch) => (
+												<SelectItem key={branch.id} value={String(branch.id)}>
+													{branch.name}
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+									{invoiceErrors.branch_id && (
+										<p className="text-xs text-destructive">
+											{invoiceErrors.branch_id}
+										</p>
+									)}
+								</Field>
+							);
+						}}
+					/>
 				</div>
 
 				<div className="space-y-4">
@@ -1121,6 +1234,41 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 																		value={String(costType.id)}
 																	>
 																		{costType.name}
+																	</SelectItem>
+																))}
+															</SelectContent>
+														</Select>
+													</Field>
+
+													<Field>
+														<Select
+															value={
+																line.location_id ? String(line.location_id) : ""
+															}
+															onValueChange={(value) => {
+																const lines = form.getFieldValue("lines");
+																const updatedLines = [...lines];
+																updatedLines[index] = {
+																	...updatedLines[index],
+																	location_id: value ? Number(value) : null,
+																};
+																form.setFieldValue("lines", updatedLines);
+															}}
+															items={locations.map((l) => ({
+																value: String(l.id),
+																label: l.name,
+															}))}
+														>
+															<SelectTrigger className="w-full">
+																<SelectValue placeholder="Location (optional)" />
+															</SelectTrigger>
+															<SelectContent>
+																{locations.map((location) => (
+																	<SelectItem
+																		key={location.id}
+																		value={String(location.id)}
+																	>
+																		{location.name}
 																	</SelectItem>
 																))}
 															</SelectContent>
