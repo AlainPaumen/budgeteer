@@ -44,8 +44,16 @@ Deploy Budgeteer using Docker Compose.
 ## Prerequisites
 
 - Docker Engine 20.10+
-- Docker Compose v2+
+- Docker Compose v2+ (or docker-compose v1)
 - Domain pointed to your server IP
+- User in the `docker` group (or use `sudo`)
+
+### Docker permissions (first time only)
+
+```bash
+sudo usermod -aG docker $USER
+newgrp docker
+```
 
 ## Setup
 
@@ -103,6 +111,9 @@ sudo ufw enable
 ### First deploy
 
 ```bash
+# First deploy
+docker-compose up -d --build
+# or if you have docker compose v2 plugin:
 docker compose up -d --build
 ```
 
@@ -151,20 +162,20 @@ docker compose logs caddy
 
 ```bash
 # View logs
-docker compose logs -f
+docker-compose logs -f
 
 # Restart services
-docker compose restart
+docker-compose restart
 
 # Stop all services
-docker compose down
+docker-compose down
 
 # Stop and remove volumes (WARNING: deletes database)
-docker compose down -v
+docker-compose down -v
 
 # Rebuild from scratch
-docker compose build --no-cache
-docker compose up -d
+docker-compose build --no-cache
+docker-compose up -d
 ```
 
 ## Rollback
@@ -175,14 +186,14 @@ Restore both the database and code to the version that created the backup.
 
 ```bash
 # 1. List available backups (filenames include git commit hash)
-docker compose exec api ls /app/data/budgeteer.db.backup.*
+docker-compose exec api ls /app/data/budgeteer.db.backup.*
 # Example output: budgeteer.db.backup.a8d6e85.2025-07-16T10-30-00
 
 # 2. Stop container
-docker compose down
+docker-compose down
 
 # 3. Restore database
-docker compose run --rm api cp \
+docker-compose run --rm api cp \
   /app/data/budgeteer.db.backup.<commit>.<timestamp> \
   /app/data/budgeteer.db
 
@@ -190,7 +201,7 @@ docker compose run --rm api cp \
 git checkout <commit>
 
 # 5. Rebuild and start
-docker compose up -d --build
+docker-compose up -d --build
 ```
 
 ### Option B: Rollback database only (skip migrations)
@@ -199,12 +210,12 @@ If the backup is from the **same code version**, skip migrations to avoid confli
 
 ```bash
 # 1. Restore database
-docker compose run --rm api cp \
+docker-compose run --rm api cp \
   /app/data/budgeteer.db.backup.<commit>.<timestamp> \
   /app/data/budgeteer.db
 
 # 2. Start with migrations skipped
-SKIP_MIGRATIONS=true docker compose up -d
+SKIP_MIGRATIONS=true docker-compose up -d
 ```
 
 ### Backup details
@@ -218,21 +229,21 @@ SKIP_MIGRATIONS=true docker compose up -d
 
 **Caddy not getting TLS certificate**
 - Ensure DNS A record points to your server IP
-- Wait a few minutes, then: `docker compose restart caddy`
-- Check logs: `docker compose logs caddy`
+- Wait a few minutes, then: `docker-compose restart caddy`
+- Check logs: `docker-compose logs caddy`
 
 **API won't start**
-- Check logs: `docker compose logs api`
+- Check logs: `docker-compose logs api`
 - Verify `.env` exists and has valid `BETTER_AUTH_SECRET`
-- Check database volume: `docker compose exec api ls -la /app/data`
+- Check database volume: `docker-compose exec api ls -la /app/data`
 
 **CORS errors in browser**
 - Ensure `FRONTEND_URL` in `.env` matches your exact domain (including `https://`)
-- Restart API after changing env: `docker compose restart api`
+- Restart API after changing env: `docker-compose restart api`
 
 **Permission denied on volumes**
-- Fix: `docker compose down && docker compose up -d --build`
+- Fix: `docker-compose down && docker-compose up -d --build`
 
 **Container keeps restarting**
-- Check logs: `docker compose logs api --tail=50`
+- Check logs: `docker-compose logs api --tail=50`
 - Common cause: missing `.env` or invalid `BETTER_AUTH_SECRET`

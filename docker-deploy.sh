@@ -15,28 +15,58 @@ for arg in "$@"; do
   esac
 done
 
+# Detect docker compose command
+# Test actual daemon access, not just command existence
+detect_dc() {
+  local candidates=(
+    "docker compose"
+    "docker-compose"
+    "sudo docker compose"
+    "sudo docker-compose"
+  )
+  for cmd in "${candidates[@]}"; do
+    if $cmd ps &>/dev/null 2>&1; then
+      echo "$cmd"
+      return 0
+    fi
+  done
+  return 1
+}
+
+DC=$(detect_dc) || {
+  echo "ERROR: Cannot connect to Docker daemon"
+  echo ""
+  echo "Fix by adding yourself to the docker group:"
+  echo "  sudo usermod -aG docker \$USER"
+  echo "  newgrp docker"
+  echo ""
+  echo "Or run this script with sudo."
+  exit 1
+}
+
+echo "==> Using: $DC"
 echo "==> Pulling latest code..."
 git pull origin main
 
 echo "==> Building containers..."
-docker compose build $NO_CACHE
+$DC build $NO_CACHE
 
 echo "==> Starting services..."
-docker compose up -d
+$DC up -d
 
 echo "==> Verifying API health..."
 sleep 3
 if curl -sf http://localhost:3000/api/health > /dev/null 2>&1; then
   echo "==> API is healthy"
 else
-  echo "==> WARNING: API health check failed. Check logs: docker compose logs api"
+  echo "==> WARNING: API health check failed. Check logs: $DC logs api"
   exit 1
 fi
 
 echo "==> Deploy complete"
-docker compose ps
+$DC ps
 
 if [ "$TAIL_LOGS" = true ]; then
   echo "==> Tailing logs (Ctrl+C to stop)..."
-  docker compose logs -f
+  $DC logs -f
 fi
