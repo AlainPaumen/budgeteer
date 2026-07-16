@@ -2,7 +2,7 @@
 set -e
 
 echo "Running database migrations..."
-cd /app
+cd /app/apps/api
 bun src/migrate.ts
 
 echo "Starting API server..."

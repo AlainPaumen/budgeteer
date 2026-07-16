@@ -2,13 +2,15 @@
 FROM oven/bun:1 AS builder
 WORKDIR /app
 
-COPY apps/web/package.json apps/web/bun.lock* ./
+COPY package.json bun.lock* ./
+COPY apps/web/package.json apps/web/
+COPY apps/api/package.json apps/api/
 COPY packages/api-types/package.json packages/api-types/
 RUN bun install --frozen-lockfile
 
-COPY apps/web/ ./
-COPY packages/api-types/ ../packages/api-types/
-RUN bun run build
+COPY apps/web/ apps/web/
+COPY packages/api-types/ packages/api-types/
+RUN cd apps/web && bun run build
 
 FROM scratch AS production
-COPY --from=builder /app/dist /
+COPY --from=builder /app/apps/web/dist /
