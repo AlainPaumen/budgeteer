@@ -9,6 +9,7 @@ COPY packages/api-types/package.json packages/api-types/
 RUN bun install --frozen-lockfile
 
 COPY apps/web/ apps/web/
+COPY apps/api/ apps/api/
 COPY packages/api-types/ packages/api-types/
 RUN cd apps/web && bun run build
 
