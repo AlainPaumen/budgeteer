@@ -9,6 +9,8 @@ import { locationRoutes } from "./routes/locations";
 import { serviceRoutes } from "./routes/services";
 import { supplierRoutes } from "./routes/suppliers";
 
+const PORT = Number(process.env.PORT) || 3000;
+
 const ALLOWED_ORIGINS = [
 	process.env.FRONTEND_URL,
 	"http://localhost:5173",
@@ -36,7 +38,7 @@ const app = new Elysia()
 		status: "ok",
 		timestamp: new Date().toISOString(),
 	}))
-	.listen(3000);
+	.listen(PORT);
 
 console.log(`Elysia server running at http://localhost:${app.server?.port}`);
 

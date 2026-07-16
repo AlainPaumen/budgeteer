@@ -9,6 +9,8 @@
 		"dev:web": "bun --filter web dev",
 		"dev:api": "bun --filter api dev",
 		"dev": "bun run dev:api & bun run dev:web",
+		"build": "cd apps/web && bun run build",
+		"start": "cd apps/api && bun run start",
 		"prepare": "husky"
 	},
 	"lint-staged": {
