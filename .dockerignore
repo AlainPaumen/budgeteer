@@ -1,0 +1,45 @@
+# Dependencies
+node_modules
+bun.lock
+bun.lockb
+
+# Build output
+apps/web/dist
+apps/api/public
+
+# Environment
+.env
+.env.local
+.env.production
+
+# Database
+apps/api/data/*.db
+apps/api/data/*.db-journal
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile
+Dockerfile.web
+docker-compose.yml
+Caddyfile
+Caddyfile.docker
+
+# Documentation
+*.md
+LICENSE
+
+# Dev tools
+.husky
+biome.json
+lint-staged.config.*

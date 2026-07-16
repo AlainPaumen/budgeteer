@@ -1,0 +1,14 @@
+# Build web app and copy to volume
+FROM oven/bun:1 AS builder
+WORKDIR /app
+
+COPY apps/web/package.json apps/web/bun.lock* ./
+COPY packages/api-types/package.json packages/api-types/
+RUN bun install --frozen-lockfile
+
+COPY apps/web/ ./
+COPY packages/api-types/ ../packages/api-types/
+RUN bun run build
+
+FROM scratch AS production
+COPY --from=builder /app/dist /

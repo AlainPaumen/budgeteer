@@ -1,0 +1,32 @@
+# Budgeteer - Caddyfile for Docker Compose
+# Replace budgeteer.example.com with your actual domain
+
+budgeteer.example.com {
+	# Serve the built SPA
+	root * /srv
+	file_server
+
+	# SPA fallback - serve index.html for all non-file routes
+	try_files {path} /index.html
+
+	# Proxy API requests to Elysia backend
+	handle_path /api/* {
+		reverse_proxy api:3000
+	}
+
+	# Security headers
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+
+	# Enable gzip compression
+	encode gzip
+
+	# Logging
+	log {
+		output file /var/log/caddy/budgeteer.log
+	}
+}
