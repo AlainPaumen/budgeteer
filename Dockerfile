@@ -26,7 +26,7 @@ COPY package.json bun.lock* ./
 COPY apps/web/package.json apps/web/
 COPY apps/api/package.json apps/api/
 COPY packages/api-types/package.json packages/api-types/
-RUN bun install --frozen-lockfile --production
+RUN bun install --frozen-lockfile --production --ignore-scripts
 
 COPY apps/api/ apps/api/
 COPY --from=web-builder /app/apps/web/dist apps/api/public
