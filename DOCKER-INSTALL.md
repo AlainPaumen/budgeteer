@@ -1,0 +1,185 @@
+# Docker Installation Guide
+
+Deploy Budgeteer using Docker Compose.
+
+## Architecture
+
+```
+┌──────────────────────────────────────────────────────────┐
+│                      Docker Compose                      │
+│                                                          │
+│  ┌─────────────┐     ┌─────────────┐     ┌────────────┐ │
+│  │   Caddy     │────▶│   Web       │     │    API     │ │
+│  │   :80/:443  │     │  (scratch)  │     │   :3000    │ │
+│  │             │     │             │     │            │ │
+│  │ - TLS       │     │ - Static    │     │ - Elysia   │ │
+│  │ - SPA       │     │   files     │     │ - SQLite   │ │
+│  │ - Proxy     │     │ - Volume    │     │ - Auth     │ │
+│  └─────────────┘     └─────────────┘     └────────────┘ │
+│         │                                     │          │
+│         │         ┌─────────────┐             │          │
+│         └────────▶│   Volumes   │◀────────────┘          │
+│                   │             │                        │
+│                   │ - api-data  │ (SQLite database)      │
+│                   │ - api-public│ (built SPA)            │
+│                   │ - caddy-data│ (TLS certificates)     │
+│                   └─────────────┘                        │
+└──────────────────────────────────────────────────────────┘
+```
+
+### Services
+
+| Service | Image | Port | Purpose |
+|---|---|---|---|
+| `caddy` | `caddy:2-alpine` | 80, 443 | Reverse proxy, TLS, static file serving |
+| `web` | scratch (builder) | - | Builds web SPA, copies to shared volume |
+| `api` | `oven/bun:1-slim` | 3000 | Elysia API server |
+
+### How it works
+
+1. **Web** service builds the React SPA and copies the output to the `api-public` volume
+2. **API** service runs the Elysia backend, persisting SQLite data to `api-data` volume
+3. **Caddy** serves the SPA from `api-public` volume and proxies `/api/*` requests to the API service
+
+## Prerequisites
+
+- Docker Engine 20.10+
+- Docker Compose v2+
+- Domain pointed to your server IP
+
+## Setup
+
+### 1. Clone the repository
+
+```bash
+git clone <your-repo-url> /opt/budgeteer
+cd /opt/budgeteer
+```
+
+### 2. Create `.env`
+
+```bash
+cp .env.example .env
+```
+
+Edit with your values:
+
+```bash
+nano .env
+```
+
+Required:
+
+```
+PORT=3000
+FRONTEND_URL=https://your-domain.com
+BETTER_AUTH_SECRET=<run: openssl rand -base64 32>
+VITE_API_URL=https://your-domain.com
+```
+
+### 3. Configure Caddy
+
+```bash
+cp Caddyfile Caddyfile.docker
+```
+
+Edit `Caddyfile.docker` — replace `budgeteer.example.com` with your domain:
+
+```bash
+nano Caddyfile.docker
+```
+
+### 4. Open firewall
+
+```bash
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw allow 22/tcp
+sudo ufw enable
+```
+
+## Deploy
+
+### First deploy
+
+```bash
+docker compose up -d --build
+```
+
+This will:
+1. Build the web SPA
+2. Build the API container
+3. Start all services
+
+### Check status
+
+```bash
+docker compose ps
+docker compose logs -f api
+docker compose logs -f caddy
+```
+
+### Verify
+
+```bash
+# API health check
+curl -i https://your-domain.com/api/health
+
+# Check logs
+docker compose logs api
+docker compose logs caddy
+```
+
+## Updating
+
+After pushing to main:
+
+```bash
+git pull origin main
+docker compose up -d --build
+```
+
+Caddy will automatically pick up changes.
+
+## Common commands
+
+```bash
+# View logs
+docker compose logs -f
+
+# Restart services
+docker compose restart
+
+# Stop all services
+docker compose down
+
+# Stop and remove volumes (WARNING: deletes database)
+docker compose down -v
+
+# Rebuild from scratch
+docker compose build --no-cache
+docker compose up -d
+```
+
+## Troubleshooting
+
+**Caddy not getting TLS certificate**
+- Ensure DNS A record points to your server IP
+- Wait a few minutes, then: `docker compose restart caddy`
+- Check logs: `docker compose logs caddy`
+
+**API won't start**
+- Check logs: `docker compose logs api`
+- Verify `.env` exists and has valid `BETTER_AUTH_SECRET`
+- Check database volume: `docker compose exec api ls -la /app/data`
+
+**CORS errors in browser**
+- Ensure `FRONTEND_URL` in `.env` matches your exact domain (including `https://`)
+- Restart API after changing env: `docker compose restart api`
+
+**Permission denied on volumes**
+- Fix: `docker compose down && docker compose up -d --build`
+
+**Container keeps restarting**
+- Check logs: `docker compose logs api --tail=50`
+- Common cause: missing `.env` or invalid `BETTER_AUTH_SECRET`
