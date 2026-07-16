@@ -161,6 +161,53 @@ docker compose build --no-cache
 docker compose up -d
 ```
 
+## Rollback
+
+### Option A: Rollback code + database (safest)
+
+Restore both the database and code to the version that created the backup.
+
+```bash
+# 1. List available backups (filenames include git commit hash)
+docker compose exec api ls /app/data/budgeteer.db.backup.*
+# Example output: budgeteer.db.backup.a8d6e85.2025-07-16T10-30-00
+
+# 2. Stop container
+docker compose down
+
+# 3. Restore database
+docker compose run --rm api cp \
+  /app/data/budgeteer.db.backup.<commit>.<timestamp> \
+  /app/data/budgeteer.db
+
+# 4. Checkout matching code
+git checkout <commit>
+
+# 5. Rebuild and start
+docker compose up -d --build
+```
+
+### Option B: Rollback database only (skip migrations)
+
+If the backup is from the **same code version**, skip migrations to avoid conflicts.
+
+```bash
+# 1. Restore database
+docker compose run --rm api cp \
+  /app/data/budgeteer.db.backup.<commit>.<timestamp> \
+  /app/data/budgeteer.db
+
+# 2. Start with migrations skipped
+SKIP_MIGRATIONS=true docker compose up -d
+```
+
+### Backup details
+
+- Backups are created automatically on each container startup (before migrations)
+- Backup filename: `budgeteer.db.backup.<git-hash>.<timestamp>`
+- Only the last 5 backups are kept (older ones are deleted)
+- Backups are stored in the `api-data` volume at `/app/data/`
+
 ## Troubleshooting
 
 **Caddy not getting TLS certificate**

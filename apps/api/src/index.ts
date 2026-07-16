@@ -1,3 +1,8 @@
+import { runMigrations } from "./migrate";
+
+// Run migrations BEFORE importing db/auth (which connect to the DB)
+runMigrations("./data/budgeteer.db");
+
 import { cors } from "@elysiajs/cors";
 import { Elysia } from "elysia";
 import { auth } from "./auth";

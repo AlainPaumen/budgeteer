@@ -26,6 +26,7 @@ WORKDIR /app
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ca-certificates \
+    git \
     && rm -rf /var/lib/apt/lists/*
 
 COPY apps/api/package.json apps/api/bun.lock* ./
@@ -33,11 +34,12 @@ RUN bun install --frozen-lockfile --production
 
 COPY apps/api/src ./src
 COPY --from=api-builder /app/public ./public
+COPY entrypoint.sh ./
 
-RUN mkdir -p data
+RUN chmod +x entrypoint.sh && mkdir -p data
 
 ENV NODE_ENV=production
 
 EXPOSE 3000
 
-CMD ["bun", "src/index.ts"]
+ENTRYPOINT ["./entrypoint.sh"]
