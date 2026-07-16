@@ -4,6 +4,7 @@ import { useNavigate } from "@tanstack/react-router";
 import {
 	ChevronDownIcon,
 	ChevronRightIcon,
+	CopyIcon,
 	PlusIcon,
 	Trash2Icon,
 } from "lucide-react";
@@ -727,10 +728,10 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 																		<TableCell>
 																			<Button
 																				variant="ghost"
-																				size="sm"
+																				size="icon-sm"
 																				onClick={() => copyLineFromRecent(line)}
 																			>
-																				Copy
+																				<CopyIcon className="size-4" />
 																			</Button>
 																		</TableCell>
 																	</TableRow>
