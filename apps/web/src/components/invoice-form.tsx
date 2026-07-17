@@ -357,7 +357,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 		queryFn: async () => {
 			if (!selectedSupplierId) return [];
 			const res = await fetch(
-				`http://localhost:3000/api/invoices/recent?supplierId=${selectedSupplierId}`,
+				`${import.meta.env.VITE_API_URL || "http://localhost:3000"}/api/invoices/recent?supplierId=${selectedSupplierId}`,
 				{ credentials: "include" },
 			);
 			if (!res.ok) throw new Error("Failed to fetch recent invoices");

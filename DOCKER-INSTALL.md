@@ -32,7 +32,7 @@ Deploy Budgeteer using Docker Compose.
 | Service | Image | Port | Purpose |
 |---|---|---|---|
 | `caddy` | `caddy:2-alpine` | 80, 443 | Reverse proxy, TLS, static file serving |
-| `web` | scratch (builder) | - | Builds web SPA, copies to shared volume |
+| `web` | `alpine:3.20` | - | Builds web SPA, copies to shared volume |
 | `api` | `oven/bun:1-slim` | 3000 | Elysia API server |
 
 ### How it works
@@ -121,6 +121,60 @@ This will:
 1. Build the web SPA
 2. Build the API container
 3. Start all services
+
+### Deploying pre-built images to another machine
+
+If you want to run Budgeteer on a new machine without rebuilding, export the images from your working environment and copy them over.
+
+**On the source machine — export images:**
+
+```bash
+docker save budgeteer_api:latest -o budgeteer_api.tar
+docker save budgeteer_web:latest -o budgeteer_web.tar
+docker save caddy:2-alpine -o caddy_alpine.tar
+```
+
+**Files to copy to the new machine:**
+
+```
+budgeteer_api.tar
+budgeteer_web.tar
+caddy_alpine.tar
+docker-compose.yml
+Caddyfile.docker
+entrypoint.sh
+.env
+```
+
+Do **not** copy `node_modules/`, `.git/`, `apps/api/data/`, or source code — they are not needed.
+
+**On the new machine — load images and start:**
+
+Linux/macOS:
+```bash
+# Load images
+docker load -i budgeteer_api.tar
+docker load -i budgeteer_web.tar
+docker load -i caddy_alpine.tar
+
+# Start
+docker compose up -d
+```
+
+Windows (PowerShell):
+```powershell
+# Load images
+docker load -i budgeteer_api.tar
+docker load -i budgeteer_web.tar
+docker load -i caddy_alpine.tar
+
+# Start
+docker compose up -d
+```
+
+Or simply run the included setup script: `./setup.sh` (Linux/macOS) or `.\setup.bat` (Windows).
+
+Update `FRONTEND_URL` and `VITE_API_URL` in `.env` to match the new machine's address (e.g. `https://budgeteer.example.com` or `http://192.168.1.50`).
 
 ### Updating
 

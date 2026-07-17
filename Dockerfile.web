@@ -13,5 +13,6 @@ COPY apps/api/ apps/api/
 COPY packages/api-types/ packages/api-types/
 RUN cd apps/web && bun run build
 
-FROM scratch AS production
-COPY --from=builder /app/apps/web/dist /
+FROM alpine:3.20 AS production
+COPY --from=builder /app/apps/web/dist /usr/share/caddy
+CMD ["true"]

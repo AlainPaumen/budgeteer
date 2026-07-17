@@ -16,3 +16,7 @@ apps/web/src/routeTree.gen.ts
 
 # Environment
 .env
+
+# Docker
+deploy_docker/
+*.tar
