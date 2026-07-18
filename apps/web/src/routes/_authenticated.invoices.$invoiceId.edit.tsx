@@ -22,6 +22,7 @@ interface InvoiceLine {
 	categoryId: number;
 	costTypeId: number;
 	locationId: number | null;
+	tag_ids: number[];
 	createdBy: string;
 	createdAt: number;
 	updatedBy: string;
@@ -93,6 +94,7 @@ function InvoiceEditPage() {
 			category_id: line.categoryId,
 			cost_type_id: line.costTypeId,
 			location_id: line.locationId,
+			tag_ids: line.tag_ids ?? [],
 		})),
 	};
 

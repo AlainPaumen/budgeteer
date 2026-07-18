@@ -250,7 +250,7 @@ export const tags = sqliteTable("tags", {
 		.notNull(),
 });
 
-export const tagRelations = relations(tags, ({ one }) => ({
+export const tagRelations = relations(tags, ({ one, many }) => ({
 	createdByUser: one(user, {
 		fields: [tags.createdBy],
 		references: [user.id],
@@ -259,6 +259,7 @@ export const tagRelations = relations(tags, ({ one }) => ({
 		fields: [tags.updatedBy],
 		references: [user.id],
 	}),
+	invoiceLines: many(invoiceLineTags),
 }));
 
 export const categories = sqliteTable("categories", {
@@ -364,33 +365,62 @@ export const invoiceLines = sqliteTable("invoice_lines", {
 		.notNull(),
 });
 
-export const invoiceLineRelations = relations(invoiceLines, ({ one }) => ({
-	invoice: one(invoices, {
-		fields: [invoiceLines.invoiceId],
-		references: [invoices.id],
+export const invoiceLineRelations = relations(
+	invoiceLines,
+	({ one, many }) => ({
+		invoice: one(invoices, {
+			fields: [invoiceLines.invoiceId],
+			references: [invoices.id],
+		}),
+		service: one(services, {
+			fields: [invoiceLines.serviceId],
+			references: [services.id],
+		}),
+		category: one(categories, {
+			fields: [invoiceLines.categoryId],
+			references: [categories.id],
+		}),
+		costType: one(costTypes, {
+			fields: [invoiceLines.costTypeId],
+			references: [costTypes.id],
+		}),
+		location: one(locations, {
+			fields: [invoiceLines.locationId],
+			references: [locations.id],
+		}),
+		createdByUser: one(user, {
+			fields: [invoiceLines.createdBy],
+			references: [user.id],
+		}),
+		updatedByUser: one(user, {
+			fields: [invoiceLines.updatedBy],
+			references: [user.id],
+		}),
+		tags: many(invoiceLineTags),
 	}),
-	service: one(services, {
-		fields: [invoiceLines.serviceId],
-		references: [services.id],
+);
+
+// ==================== INVOICE LINE TAGS ====================
+
+export const invoiceLineTags = sqliteTable("invoice_line_tags", {
+	invoiceLineId: integer("invoice_line_id")
+		.notNull()
+		.references(() => invoiceLines.id, { onDelete: "cascade" }),
+	tagId: integer("tag_id")
+		.notNull()
+		.references(() => tags.id, { onDelete: "cascade" }),
+});
+
+export const invoiceLineTagRelations = relations(
+	invoiceLineTags,
+	({ one }) => ({
+		invoiceLine: one(invoiceLines, {
+			fields: [invoiceLineTags.invoiceLineId],
+			references: [invoiceLines.id],
+		}),
+		tag: one(tags, {
+			fields: [invoiceLineTags.tagId],
+			references: [tags.id],
+		}),
 	}),
-	category: one(categories, {
-		fields: [invoiceLines.categoryId],
-		references: [categories.id],
-	}),
-	costType: one(costTypes, {
-		fields: [invoiceLines.costTypeId],
-		references: [costTypes.id],
-	}),
-	location: one(locations, {
-		fields: [invoiceLines.locationId],
-		references: [locations.id],
-	}),
-	createdByUser: one(user, {
-		fields: [invoiceLines.createdBy],
-		references: [user.id],
-	}),
-	updatedByUser: one(user, {
-		fields: [invoiceLines.updatedBy],
-		references: [user.id],
-	}),
-}));
+);

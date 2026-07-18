@@ -1,9 +1,15 @@
-import { and, asc, count, desc, eq, like, or, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, like, or, sql } from "drizzle-orm";
 import { Elysia } from "elysia";
 import { z } from "zod";
 import { auth } from "../auth";
 import { db } from "../db";
-import { invoiceLines, invoices, suppliers } from "../db/schema";
+import {
+	invoiceLines,
+	invoiceLineTags,
+	invoices,
+	suppliers,
+	tags,
+} from "../db/schema";
 
 const invoiceLineSchema = z.object({
 	description: z.string().min(1, "Description is required").max(500),
@@ -19,6 +25,7 @@ const invoiceLineSchema = z.object({
 	category_id: z.number().int().positive("Category is required"),
 	cost_type_id: z.number().int().positive("Cost type is required"),
 	location_id: z.number().int().positive().nullable().optional(),
+	tag_ids: z.array(z.number().int().positive()).optional().default([]),
 });
 
 const createInvoiceSchema = z.object({
@@ -60,6 +67,23 @@ async function getSessionUserId(request: Request): Promise<string | null> {
 	return session?.user?.id ?? null;
 }
 
+async function getLinesWithTags(lines: { id: number }[]) {
+	if (lines.length === 0) return [];
+
+	const lineIds = lines.map((l) => l.id);
+	const allLineTags = await db
+		.select({
+			invoiceLineId: invoiceLineTags.invoiceLineId,
+			tagId: invoiceLineTags.tagId,
+			tagName: tags.name,
+		})
+		.from(invoiceLineTags)
+		.innerJoin(tags, eq(invoiceLineTags.tagId, tags.id))
+		.where(inArray(invoiceLineTags.invoiceLineId, lineIds));
+
+	return allLineTags;
+}
+
 export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 	.get("/recent", async ({ request, query }) => {
 		const userId = await getSessionUserId(request);
@@ -85,7 +109,16 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 					.select()
 					.from(invoiceLines)
 					.where(eq(invoiceLines.invoiceId, invoice.id));
-				return { ...invoice, lines };
+
+				const allLineTags = await getLinesWithTags(lines);
+				const linesWithTags = lines.map((line) => ({
+					...line,
+					tag_ids: allLineTags
+						.filter((lt) => lt.invoiceLineId === line.id)
+						.map((lt) => lt.tagId),
+				}));
+
+				return { ...invoice, lines: linesWithTags };
 			}),
 		);
 
@@ -162,6 +195,15 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 					.select()
 					.from(invoiceLines)
 					.where(eq(invoiceLines.invoiceId, invoice.id));
+
+				const allLineTags = await getLinesWithTags(lines);
+				const linesWithTags = lines.map((line) => ({
+					...line,
+					tag_ids: allLineTags
+						.filter((lt) => lt.invoiceLineId === line.id)
+						.map((lt) => lt.tagId),
+				}));
+
 				return {
 					id: invoice.id,
 					supplierId: invoice.supplierId,
@@ -172,7 +214,7 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 					createdAt: invoice.createdAt,
 					updatedBy: invoice.updatedBy,
 					updatedAt: invoice.updatedAt,
-					lines,
+					lines: linesWithTags,
 				};
 			}),
 		);
@@ -222,7 +264,15 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 			.from(invoiceLines)
 			.where(eq(invoiceLines.invoiceId, id));
 
-		return { ...existing[0], lines };
+		const allLineTags = await getLinesWithTags(lines);
+		const linesWithTags = lines.map((line) => ({
+			...line,
+			tag_ids: allLineTags
+				.filter((lt) => lt.invoiceLineId === line.id)
+				.map((lt) => lt.tagId),
+		}));
+
+		return { ...existing[0], lines: linesWithTags };
 	})
 	.post("/", async ({ request, body }) => {
 		const userId = await getSessionUserId(request);
@@ -301,6 +351,16 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 						updatedAt: now,
 					})
 					.returning();
+
+				if (line.tag_ids && line.tag_ids.length > 0) {
+					await db.insert(invoiceLineTags).values(
+						line.tag_ids.map((tagId) => ({
+							invoiceLineId: createdLine.id,
+							tagId,
+						})),
+					);
+				}
+
 				return createdLine;
 			}),
 		);
@@ -385,29 +445,56 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 			.where(eq(invoices.id, id));
 
 		if (lines !== undefined) {
+			// Delete existing tag associations for lines being replaced
+			const existingLineIds = await db
+				.select({ id: invoiceLines.id })
+				.from(invoiceLines)
+				.where(eq(invoiceLines.invoiceId, id));
+
+			if (existingLineIds.length > 0) {
+				const ids = existingLineIds.map((l) => l.id);
+				await db
+					.delete(invoiceLineTags)
+					.where(inArray(invoiceLineTags.invoiceLineId, ids));
+			}
+
+			// Delete existing lines
 			await db.delete(invoiceLines).where(eq(invoiceLines.invoiceId, id));
 
+			// Re-insert lines with tags
 			await Promise.all(
 				lines.map(async (line) => {
 					const startDate = new Date(line.start_date);
 					const endDate = line.end_date ? new Date(line.end_date) : startDate;
-					await db.insert(invoiceLines).values({
-						invoiceId: id,
-						description: line.description,
-						unitPrice: line.unit_price,
-						numberOfUnits: line.number_of_units,
-						totalAmount: line.total_amount,
-						startDate,
-						endDate,
-						serviceId: line.service_id,
-						categoryId: line.category_id,
-						costTypeId: line.cost_type_id,
-						locationId: line.location_id ?? null,
-						createdBy: userId,
-						createdAt: now,
-						updatedBy: userId,
-						updatedAt: now,
-					});
+					const [createdLine] = await db
+						.insert(invoiceLines)
+						.values({
+							invoiceId: id,
+							description: line.description,
+							unitPrice: line.unit_price,
+							numberOfUnits: line.number_of_units,
+							totalAmount: line.total_amount,
+							startDate,
+							endDate,
+							serviceId: line.service_id,
+							categoryId: line.category_id,
+							costTypeId: line.cost_type_id,
+							locationId: line.location_id ?? null,
+							createdBy: userId,
+							createdAt: now,
+							updatedBy: userId,
+							updatedAt: now,
+						})
+						.returning();
+
+					if (line.tag_ids && line.tag_ids.length > 0) {
+						await db.insert(invoiceLineTags).values(
+							line.tag_ids.map((tagId) => ({
+								invoiceLineId: createdLine.id,
+								tagId,
+							})),
+						);
+					}
 				}),
 			);
 		}
@@ -423,7 +510,15 @@ export const invoiceRoutes = new Elysia({ prefix: "/api/invoices" })
 			.from(invoiceLines)
 			.where(eq(invoiceLines.invoiceId, id));
 
-		return { ...updated[0], lines: updatedLines };
+		const allLineTags = await getLinesWithTags(updatedLines);
+		const linesWithTags = updatedLines.map((line) => ({
+			...line,
+			tag_ids: allLineTags
+				.filter((lt) => lt.invoiceLineId === line.id)
+				.map((lt) => lt.tagId),
+		}));
+
+		return { ...updated[0], lines: linesWithTags };
 	})
 	.delete("/:id", async ({ request, params }) => {
 		const userId = await getSessionUserId(request);

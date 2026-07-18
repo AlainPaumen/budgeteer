@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import MultipleSelector from "@/components/ui/multi-select";
 import {
 	Select,
 	SelectContent,
@@ -46,6 +47,7 @@ const invoiceLineSchema = z.object({
 	category_id: z.number().int().positive("Category is required"),
 	cost_type_id: z.number().int().positive("Cost type is required"),
 	location_id: z.number().int().positive().nullable().optional(),
+	tag_ids: z.array(z.number()).optional().default([]),
 });
 
 const invoiceSchema = z
@@ -107,6 +109,11 @@ interface CostType {
 	name: string;
 }
 
+interface Tag {
+	id: number;
+	name: string;
+}
+
 interface RecentInvoiceLine {
 	id: number;
 	invoiceId: number;
@@ -120,6 +127,7 @@ interface RecentInvoiceLine {
 	categoryId: number;
 	costTypeId: number;
 	locationId: number | null;
+	tag_ids: number[];
 	createdBy: string;
 	createdAt: number;
 	updatedBy: string;
@@ -183,7 +191,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 		},
 	});
 
-	const { data: branches = [], error: branchesError } = useQuery({
+	const { data: branches = [] } = useQuery({
 		queryKey: ["branches"],
 		queryFn: async () => {
 			const res = await eden.api.branches.get({
@@ -194,7 +202,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 		},
 	});
 
-	const { data: locations = [], error: locationsError } = useQuery({
+	const { data: locations = [] } = useQuery({
 		queryKey: ["locations", selectedBranchId],
 		queryFn: async () => {
 			if (!selectedBranchId) return [];
@@ -241,6 +249,17 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 		},
 	});
 
+	const { data: availableTags = [] } = useQuery({
+		queryKey: ["tags"],
+		queryFn: async () => {
+			const res = await eden.api.tags.get({
+				query: { limit: "100", is_active: "true", order: "asc" },
+			});
+			if (res.error) throw res.error;
+			return (res.data as unknown as { data: Tag[] }).data;
+		},
+	});
+
 	const defaultValues: InvoiceFormValues = {
 		supplier_id: initialData?.supplierId ?? 0,
 		branch_id: initialData?.branchId ?? 0,
@@ -257,6 +276,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 					end_date: line.end_date
 						? new Date(line.end_date).toISOString().split("T")[0]
 						: "",
+					tag_ids: line.tag_ids ?? [],
 				}))
 			: [],
 	};
@@ -272,6 +292,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 					total_amount: Math.round((line.total_amount ?? 0) * 100),
 					start_date: line.start_date,
 					end_date: line.end_date || line.start_date,
+					tag_ids: line.tag_ids ?? [],
 				})),
 			};
 			console.log("Creating invoice:", apiData);
@@ -297,6 +318,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 					total_amount: Math.round((line.total_amount ?? 0) * 100),
 					start_date: line.start_date,
 					end_date: line.end_date || line.start_date,
+					tag_ids: line.tag_ids ?? [],
 				})),
 			};
 			const res = await eden.api
@@ -384,6 +406,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 					end_date: line.end_date
 						? new Date(line.end_date).toISOString().split("T")[0]
 						: "",
+					tag_ids: line.tag_ids ?? [],
 				})),
 			);
 		}
@@ -422,6 +445,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 				category_id: line.categoryId,
 				cost_type_id: line.costTypeId,
 				location_id: line.locationId ?? null,
+				tag_ids: line.tag_ids ?? [],
 			},
 		]);
 	};
@@ -441,6 +465,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 				category_id: 0,
 				cost_type_id: 0,
 				location_id: null,
+				tag_ids: [],
 			},
 		]);
 	};
@@ -1317,6 +1342,46 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 															)}
 														</div>
 													)}
+
+												{availableTags.length > 0 && (
+													<Field>
+														<FieldLabel>Tags</FieldLabel>
+														<MultipleSelector
+															value={availableTags
+																.filter(
+																	(tag) =>
+																		line.tag_ids?.includes(tag.id) ?? false,
+																)
+																.map((tag) => ({
+																	value: String(tag.id),
+																	label: tag.name,
+																}))}
+															onChange={(options) => {
+																const tagIds = options.map((opt) =>
+																	Number(opt.value),
+																);
+																const lines = form.getFieldValue("lines");
+																const updatedLines = [...lines];
+																updatedLines[index] = {
+																	...updatedLines[index],
+																	tag_ids: tagIds,
+																};
+																form.setFieldValue("lines", updatedLines);
+															}}
+															defaultOptions={availableTags.map((tag) => ({
+																value: String(tag.id),
+																label: tag.name,
+															}))}
+															placeholder="Select tags"
+															emptyIndicator={
+																<p className="text-center text-sm">
+																	No tags found
+																</p>
+															}
+															className="w-full"
+														/>
+													</Field>
+												)}
 											</div>
 										);
 									})}
