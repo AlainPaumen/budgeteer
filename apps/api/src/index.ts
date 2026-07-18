@@ -13,6 +13,7 @@ import { invoiceRoutes } from "./routes/invoices";
 import { locationRoutes } from "./routes/locations";
 import { serviceRoutes } from "./routes/services";
 import { supplierRoutes } from "./routes/suppliers";
+import { tagRoutes } from "./routes/tags";
 
 const PORT = Number(process.env.PORT) || 3000;
 
@@ -33,6 +34,7 @@ const app = new Elysia()
 	)
 	.mount(auth.handler)
 	.use(supplierRoutes)
+	.use(tagRoutes)
 	.use(branchRoutes)
 	.use(locationRoutes)
 	.use(serviceRoutes)

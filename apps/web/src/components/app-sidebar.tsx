@@ -10,6 +10,7 @@ import {
 	NetworkIcon,
 	PieChartIcon,
 	SendIcon,
+	TagIcon,
 	TerminalIcon,
 	WrenchIcon,
 } from "lucide-react";
@@ -151,6 +152,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							<SidebarMenuButton render={<a href="/categories" />}>
 								<FolderTreeIcon />
 								<span>Categories</span>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+						<SidebarMenuItem>
+							<SidebarMenuButton render={<a href="/tags" />}>
+								<TagIcon />
+								<span>Tags</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 					</SidebarMenu>
