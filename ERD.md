@@ -85,6 +85,17 @@ erDiagram
         timestamp updated_at
     }
 
+    tags {
+        integer id PK
+        text name UK
+        text notes
+        boolean is_active
+        text created_by FK
+        timestamp created_at
+        text updated_by FK
+        timestamp updated_at
+    }
+
     invoice_lines {
         integer id PK
         integer invoice_id FK
@@ -104,6 +115,11 @@ erDiagram
         timestamp updated_at
     }
 
+    invoice_line_tags {
+        integer invoice_line_id FK
+        integer tag_id FK
+    }
+
     branches ||--o{ locations : "has"
     suppliers ||--o{ invoices : "supplied by"
     branches ||--o{ invoices : "branch"
@@ -112,6 +128,8 @@ erDiagram
     categories ||--o{ invoice_lines : "category"
     cost_types ||--o{ invoice_lines : "cost type"
     locations ||--o{ invoice_lines : "location"
+    invoice_lines ||--o{ invoice_line_tags : "has"
+    tags ||--o{ invoice_line_tags : "has"
 ```
 
 > **Note:** All tables have `created_by` and `updated_by` foreign keys referencing the `user` table (see [BetterAuth Tables](#betterauth-tables)). These relationships are omitted from the diagram above for clarity.
