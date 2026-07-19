@@ -1,0 +1,12 @@
+services:
+  budgeteer:
+    build: .
+    ports:
+      - "1234:3000"
+    volumes:
+      - ./data-volume:/app/data
+    env_file:
+      - .env.docker
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped
