@@ -21,3 +21,4 @@ apps/web/src/routeTree.gen.ts
 # Docker
 deploy_docker/
 *.tar
+data-volume/
