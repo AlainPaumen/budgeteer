@@ -25,15 +25,15 @@ RUN cd apps/web && bun run build
 FROM oven/bun:slim
 WORKDIR /app
 
-# Copy workspace root files
-COPY package.json bun.lock tsconfig.json ./
+# Copy workspace root files (no lockfile — runtime has fewer packages)
+COPY package.json tsconfig.json ./
 
 # Copy workspace package manifests
 COPY apps/api/package.json apps/api/package.json
 COPY packages/api-types/package.json packages/api-types/package.json
 
-# Install production dependencies only
-RUN bun install --production
+# Install production dependencies only (skip prepare scripts like husky)
+RUN bun install --production --ignore-scripts
 
 # Copy API source (includes migrations)
 COPY apps/api/ apps/api/
