@@ -28,7 +28,8 @@ WORKDIR /app
 # Copy workspace root files (no lockfile — runtime has fewer packages)
 COPY package.json tsconfig.json ./
 
-# Copy workspace package manifests
+# Copy workspace package manifests (all workspaces needed for proper hoisting)
+COPY apps/web/package.json apps/web/package.json
 COPY apps/api/package.json apps/api/package.json
 COPY packages/api-types/package.json packages/api-types/package.json
 
