@@ -28,8 +28,8 @@ WORKDIR /app
 # Copy everything from builder (source + node_modules)
 COPY --from=builder /app ./
 
-# Copy built frontend into public directory (API's staticPlugin reads from ./public)
-RUN cp -r /app/apps/web/dist /app/public
+# Copy built frontend into public directory (API runs from apps/api/, so needs ./public relative to that)
+RUN cp -r /app/apps/web/dist /app/apps/api/public
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data
