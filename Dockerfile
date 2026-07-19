@@ -25,26 +25,8 @@ RUN cd apps/web && bun run build
 FROM oven/bun:slim
 WORKDIR /app
 
-# Copy workspace root files (no lockfile — runtime has fewer packages)
-COPY package.json tsconfig.json ./
-
-# Copy workspace package manifests (all workspaces needed for proper hoisting)
-COPY apps/web/package.json apps/web/package.json
-COPY apps/api/package.json apps/api/package.json
-COPY packages/api-types/package.json packages/api-types/package.json
-
-# Install production dependencies only (skip prepare scripts like husky)
-RUN bun install --production --ignore-scripts
-
-# Copy API source (includes migrations)
-COPY apps/api/ apps/api/
-
-# Copy shared types package
-COPY packages/api-types/ packages/api-types/
-
-# Copy built frontend from builder stage into public directory
-# (matches staticPlugin assets path in apps/api/src/index.ts)
-COPY --from=builder /app/apps/web/dist/ ./public/
+# Copy everything from builder (source + node_modules)
+COPY --from=builder /app ./
 
 # Create data directory for SQLite
 RUN mkdir -p /app/data
