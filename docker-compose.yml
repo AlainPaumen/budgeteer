@@ -1,6 +1,6 @@
 services:
   budgeteer:
-    build: .
+    image: budgeteer:latest
     ports:
       - "1234:3000"
     volumes:
