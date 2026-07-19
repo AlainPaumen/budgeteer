@@ -1,6 +1,5 @@
 import { Database } from "bun:sqlite";
-import { execSync } from "node:child_process";
-import { readdirSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { drizzle } from "drizzle-orm/bun-sqlite";
 import { migrate } from "drizzle-orm/bun-sqlite/migrator";
 
@@ -8,7 +7,12 @@ const MAX_BACKUPS = 5;
 
 function getGitHash(): string {
 	try {
-		return execSync("git rev-parse --short HEAD").toString().trim();
+		const head = readFileSync(".git/HEAD", "utf-8").trim();
+		if (head.startsWith("ref: ")) {
+			const refPath = `.git/${head.slice(5)}`;
+			return readFileSync(refPath, "utf-8").trim().slice(0, 7);
+		}
+		return head.slice(0, 7);
 	} catch {
 		return "unknown";
 	}

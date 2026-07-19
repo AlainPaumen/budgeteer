@@ -6,8 +6,17 @@ import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/_authenticated")({
 	beforeLoad: async () => {
-		const { data } = await authClient.getSession();
-		if (!data?.session) {
+		try {
+			const { data, error } = await authClient.getSession();
+			console.log("session data:", data, "error:", error);
+			if (!data?.user) {
+				throw redirect({
+					to: "/auth/login",
+					search: { redirect: window.location.pathname },
+				});
+			}
+		} catch (e) {
+			console.error("getSession failed:", e);
 			throw redirect({
 				to: "/auth/login",
 				search: { redirect: window.location.pathname },

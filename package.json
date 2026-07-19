@@ -23,6 +23,7 @@
 	},
 	"dependencies": {
 		"@better-auth/drizzle-adapter": "^1.6.23",
+		"@elysiajs/static": "^1.4.10",
 		"better-auth": "^1.6.23"
 	},
 	"devDependencies": {
