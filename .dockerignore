@@ -1,43 +1,20 @@
-# Dependencies
 node_modules
-
-# Build output
+dist
 apps/web/dist
 apps/api/public
-
-# Environment
+apps/api/data
 .env
-.env.local
-.env.production
-
-# Database
-apps/api/data/*.db
-apps/api/data/*.db-journal
-
-# Git
+.env.docker
 .git
 .gitignore
-
-# IDE
+*.md
 .vscode
 .idea
-
-# OS
 .DS_Store
 Thumbs.db
-
-# Docker
-Dockerfile
-Dockerfile.web
-docker-compose.yml
-Caddyfile
-Caddyfile.docker
-
-# Documentation
-*.md
-LICENSE
-
-# Dev tools
+graphify-out
+.superpowers
 .husky
-biome.json
-lint-staged.config.*
+.specify
+.opencode
+data
