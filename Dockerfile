@@ -19,8 +19,10 @@ COPY packages/ packages/
 COPY vite.config.ts ./
 
 # Build frontend (VITE_ vars must be set at build time)
-ARG VITE_API_URL=http://localhost/api/auth
+ARG VITE_API_URL=http://localhost
+ARG VITE_AUTH_URL=http://localhost/api/auth
 ENV VITE_API_URL=$VITE_API_URL
+ENV VITE_AUTH_URL=$VITE_AUTH_URL
 RUN cd apps/web && bun run build
 
 # Stage 2: Runtime

@@ -23,7 +23,7 @@ export const auth = betterAuth({
 		max: 100,
 	},
 	advanced: {
-		useSecureCookies: isProduction,
+		useSecureCookies: false,
 		...(isProduction && {
 			ipAddress: {
 				ipAddressHeaders: ["x-forwarded-for", "x-real-ip"],

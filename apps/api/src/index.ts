@@ -5,7 +5,7 @@ runMigrations("./data/budgeteer.db");
 
 import { readFileSync } from "node:fs";
 import { cors } from "@elysiajs/cors";
-import { staticPlugin } from "@elysiajs/static";
+
 import { Elysia } from "elysia";
 import { auth } from "./auth";
 import { branchRoutes } from "./routes/branches";
@@ -36,7 +36,26 @@ const app = new Elysia()
 			allowedHeaders: ["Content-Type", "Authorization"],
 		}),
 	)
-	.all("/api/auth/*", ({ request }) => auth.handler(request))
+	.get("/api/auth/*", async ({ request }) => {
+		console.log("[auth-get]", request.method, new URL(request.url).pathname);
+		return auth.handler(request);
+	})
+	.post("/api/auth/*", async ({ request }) => {
+		console.log("[auth-post]", request.method, new URL(request.url).pathname);
+		return auth.handler(request);
+	})
+	.put("/api/auth/*", async ({ request }) => {
+		console.log("[auth-put]", request.method, new URL(request.url).pathname);
+		return auth.handler(request);
+	})
+	.patch("/api/auth/*", async ({ request }) => {
+		console.log("[auth-patch]", request.method, new URL(request.url).pathname);
+		return auth.handler(request);
+	})
+	.delete("/api/auth/*", async ({ request }) => {
+		console.log("[auth-del]", request.method, new URL(request.url).pathname);
+		return auth.handler(request);
+	})
 	.use(supplierRoutes)
 	.use(tagRoutes)
 	.use(branchRoutes)
@@ -73,16 +92,10 @@ if (!isProduction) {
 }
 
 if (isProduction) {
-	app.use(
-		staticPlugin({
-			assets: "./public",
-			prefix: "/",
-			indexHTML: true,
-			silent: true,
-		}),
-	);
-	app.get("/*", ({ path }) => {
+	app.get("/*", async ({ path }) => {
 		if (path.startsWith("/api")) return;
+		const file = Bun.file(`./public${path}`);
+		if (await file.exists()) return file;
 		try {
 			const html = readFileSync("./public/index.html", "utf-8");
 			return new Response(html, {
