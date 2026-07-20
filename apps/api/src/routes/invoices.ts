@@ -13,12 +13,12 @@ import {
 
 const invoiceLineSchema = z.object({
 	description: z.string().min(1, "Description is required").max(500),
-	unit_price: z.number().int().positive("Unit price must be positive"),
+	unit_price: z.number().positive("Unit price must be positive"),
 	number_of_units: z
 		.number()
 		.int()
 		.positive("Number of units must be positive"),
-	total_amount: z.number().int().positive("Total amount must be positive"),
+	total_amount: z.number().positive("Total amount must be positive"),
 	start_date: z.string().min(1, "Start date is required"),
 	end_date: z.string().optional(),
 	service_id: z.number().int().positive("Service is required"),

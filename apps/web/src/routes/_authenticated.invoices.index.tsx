@@ -197,7 +197,7 @@ function InvoicesPage() {
 		return new Intl.NumberFormat("en-US", {
 			style: "currency",
 			currency: "EUR",
-		}).format(amount / 100);
+		}).format(amount / 10000);
 	};
 
 	return (

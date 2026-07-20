@@ -180,6 +180,19 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 		{},
 	);
 
+	const [unitPriceStrings, setUnitPriceStrings] = useState<
+		Record<number, string>
+	>(() => {
+		const init: Record<number, string> = {};
+		if (initialData?.lines) {
+			initialData.lines.forEach((line, i) => {
+				const val = line.unit_price / 10000;
+				init[i] = val === 0 ? "" : String(val);
+			});
+		}
+		return init;
+	});
+
 	const { data: suppliers = [], error: suppliersError } = useQuery({
 		queryKey: ["suppliers"],
 		queryFn: async () => {
@@ -268,8 +281,8 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 		lines: initialData?.lines
 			? initialData.lines.map((line) => ({
 					...line,
-					unit_price: line.unit_price / 100,
-					total_amount: (line.total_amount ?? 0) / 100,
+					unit_price: line.unit_price / 10000,
+					total_amount: (line.total_amount ?? 0) / 10000,
 					start_date: line.start_date
 						? new Date(line.start_date).toISOString().split("T")[0]
 						: "",
@@ -287,9 +300,9 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 				...data,
 				lines: data.lines.map((line) => ({
 					...line,
-					unit_price: Math.round(line.unit_price * 100),
+					unit_price: Math.round(line.unit_price * 10000),
 					number_of_units: line.number_of_units,
-					total_amount: Math.round((line.total_amount ?? 0) * 100),
+					total_amount: Math.round((line.total_amount ?? 0) * 10000),
 					start_date: line.start_date,
 					end_date: line.end_date || line.start_date,
 					tag_ids: line.tag_ids ?? [],
@@ -313,9 +326,9 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 				...data,
 				lines: data.lines.map((line) => ({
 					...line,
-					unit_price: Math.round(line.unit_price * 100),
+					unit_price: Math.round(line.unit_price * 10000),
 					number_of_units: line.number_of_units,
-					total_amount: Math.round((line.total_amount ?? 0) * 100),
+					total_amount: Math.round((line.total_amount ?? 0) * 10000),
 					start_date: line.start_date,
 					end_date: line.end_date || line.start_date,
 					tag_ids: line.tag_ids ?? [],
@@ -398,8 +411,8 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 				"lines",
 				initialData.lines.map((line) => ({
 					...line,
-					unit_price: line.unit_price / 100,
-					total_amount: (line.total_amount ?? 0) / 100,
+					unit_price: line.unit_price / 10000,
+					total_amount: (line.total_amount ?? 0) / 10000,
 					start_date: line.start_date
 						? new Date(line.start_date).toISOString().split("T")[0]
 						: "",
@@ -409,6 +422,12 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 					tag_ids: line.tag_ids ?? [],
 				})),
 			);
+			const strings: Record<number, string> = {};
+			initialData.lines.forEach((line, i) => {
+				const val = line.unit_price / 10000;
+				strings[i] = val === 0 ? "" : String(val);
+			});
+			setUnitPriceStrings(strings);
 		}
 	}, [initialData, form]);
 
@@ -428,13 +447,15 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 
 	const copyLineFromRecent = (line: RecentInvoiceLine) => {
 		const currentLines = form.getFieldValue("lines");
+		const newIndex = currentLines.length;
+		const unitPrice = line.unitPrice / 10000;
 		form.setFieldValue("lines", [
 			...currentLines,
 			{
 				description: line.description,
-				unit_price: line.unitPrice / 100,
+				unit_price: unitPrice,
 				number_of_units: line.numberOfUnits,
-				total_amount: line.totalAmount / 100,
+				total_amount: line.totalAmount / 10000,
 				start_date: line.startDate
 					? new Date(line.startDate).toISOString().split("T")[0]
 					: "",
@@ -448,10 +469,15 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 				tag_ids: line.tag_ids ?? [],
 			},
 		]);
+		setUnitPriceStrings((prev) => ({
+			...prev,
+			[newIndex]: unitPrice === 0 ? "" : String(unitPrice),
+		}));
 	};
 
 	const addLine = () => {
 		const currentLines = form.getFieldValue("lines");
+		const newIndex = currentLines.length;
 		form.setFieldValue("lines", [
 			...currentLines,
 			{
@@ -468,14 +494,24 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 				tag_ids: [],
 			},
 		]);
+		setUnitPriceStrings((prev) => ({ ...prev, [newIndex]: "" }));
 	};
 
 	const removeLine = (index: number) => {
 		const currentLines = form.getFieldValue("lines");
-		form.setFieldValue(
-			"lines",
-			currentLines.filter((_, i) => i !== index),
+		const remaining = currentLines.filter(
+			(_: unknown, i: number) => i !== index,
 		);
+		form.setFieldValue("lines", remaining);
+		setUnitPriceStrings((prev) => {
+			const next: Record<number, string> = {};
+			Object.entries(prev).forEach(([key, val]) => {
+				const i = Number(key);
+				if (i < index) next[i] = val;
+				else if (i > index) next[i - 1] = val;
+			});
+			return next;
+		});
 	};
 
 	const updateLineTotal = (
@@ -933,8 +969,9 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 																€
 															</span>
 															<Input
-																type="number"
-																value={line.unit_price || ""}
+																type="text"
+																inputMode="decimal"
+																value={unitPriceStrings[index] ?? ""}
 																aria-invalid={!!errors.unit_price}
 																className={
 																	errors.unit_price
@@ -942,7 +979,16 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 																		: "pl-6"
 																}
 																onChange={(e) => {
-																	const value = Number(e.target.value);
+																	const raw = e.target.value;
+																	setUnitPriceStrings((prev) => ({
+																		...prev,
+																		[index]: raw,
+																	}));
+																	const value =
+																		raw === "" || raw === "." || raw === "0."
+																			? 0
+																			: Number(raw);
+																	if (Number.isNaN(value)) return;
 																	const lines = form.getFieldValue("lines");
 																	const updatedLines = [...lines];
 																	updatedLines[index] = {
