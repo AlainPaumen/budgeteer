@@ -1,1 +1,0 @@
-CREATE UNIQUE INDEX `supplier_name_userId_idx` ON `supplier` (`name`, `user_id`);
