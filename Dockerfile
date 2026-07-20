@@ -34,7 +34,7 @@ COPY --from=builder /app ./
 COPY --from=builder /app/apps/web/dist/ /app/apps/api/public/
 
 # Create data directory for SQLite
-RUN mkdir -p /app/data
+RUN mkdir -p /app/apps/api/data
 
 EXPOSE 3000
 
