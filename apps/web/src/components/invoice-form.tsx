@@ -39,7 +39,7 @@ const invoiceLineSchema = z.object({
 	number_of_units: z
 		.number()
 		.int()
-		.positive("Number of units must be positive"),
+		.min(0, "Number of units must be 0 or greater"),
 	total_amount: z.number().optional(),
 	start_date: z.string().min(1, "Start date is required"),
 	end_date: z.string().optional(),
@@ -514,6 +514,26 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 		});
 	};
 
+	const duplicateLine = (index: number) => {
+		const currentLines = form.getFieldValue("lines");
+		const source = currentLines[index];
+		const copy = { ...source };
+		const updatedLines = [...currentLines];
+		updatedLines.splice(index + 1, 0, copy);
+		form.setFieldValue("lines", updatedLines);
+		setUnitPriceStrings((prev) => {
+			const next: Record<number, string> = {};
+			Object.entries(prev).forEach(([key, val]) => {
+				const i = Number(key);
+				if (i <= index) next[i] = val;
+				else next[i + 1] = val;
+			});
+			const sourceStr = prev[index] ?? "";
+			next[index + 1] = sourceStr;
+			return next;
+		});
+	};
+
 	const updateLineTotal = (
 		index: number,
 		unitPrice: number,
@@ -930,7 +950,7 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 												key={index}
 												className="border rounded-md p-4 space-y-3"
 											>
-												<div className="grid grid-cols-[1fr_120px_100px_120px_40px] gap-2 items-end">
+												<div className="grid grid-cols-[1fr_120px_100px_120px_auto] gap-2 items-end">
 													<Field>
 														<FieldLabel>Description</FieldLabel>
 														<Input
@@ -1069,15 +1089,26 @@ export function InvoiceForm({ invoiceId, initialData }: InvoiceFormProps) {
 														/>
 													</Field>
 
-													<Button
-														type="button"
-														variant="ghost"
-														size="icon-sm"
-														className="mb-0.5"
-														onClick={() => removeLine(index)}
-													>
-														<Trash2Icon className="size-4" />
-													</Button>
+													<div className="flex items-end gap-1">
+														<Button
+															type="button"
+															variant="ghost"
+															size="icon-sm"
+															className="mb-0.5"
+															onClick={() => removeLine(index)}
+														>
+															<Trash2Icon className="size-4" />
+														</Button>
+														<Button
+															type="button"
+															variant="ghost"
+															size="icon-sm"
+															className="mb-0.5"
+															onClick={() => duplicateLine(index)}
+														>
+															<CopyIcon className="size-4" />
+														</Button>
+													</div>
 												</div>
 
 												{hasErrors &&

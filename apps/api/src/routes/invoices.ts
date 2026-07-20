@@ -17,7 +17,7 @@ const invoiceLineSchema = z.object({
 	number_of_units: z
 		.number()
 		.int()
-		.positive("Number of units must be positive"),
+		.min(0, "Number of units must be 0 or greater"),
 	total_amount: z.number().positive("Total amount must be positive"),
 	start_date: z.string().min(1, "Start date is required"),
 	end_date: z.string().optional(),
