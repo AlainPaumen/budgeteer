@@ -1,5 +1,6 @@
 import {
 	BanknoteArrowDownIcon,
+	BarChart3Icon,
 	Building2Icon,
 	FoldersIcon,
 	FolderTreeIcon,
@@ -158,6 +159,17 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							<SidebarMenuButton render={<a href="/tags" />}>
 								<TagIcon />
 								<span>Tags</span>
+							</SidebarMenuButton>
+						</SidebarMenuItem>
+					</SidebarMenu>
+				</SidebarGroup>
+				<SidebarGroup>
+					<SidebarGroupLabel>Reports</SidebarGroupLabel>
+					<SidebarMenu>
+						<SidebarMenuItem>
+							<SidebarMenuButton render={<a href="/reports/expenses" />}>
+								<BarChart3Icon />
+								<span>Expenses</span>
 							</SidebarMenuButton>
 						</SidebarMenuItem>
 					</SidebarMenu>

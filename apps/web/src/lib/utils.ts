@@ -24,3 +24,10 @@ export function formatDateFromDate(date: Date): string {
 export function formatDate(timestamp: number): string {
 	return formatDateFromDate(new Date(timestamp));
 }
+
+export function formatCurrency(amount: number): string {
+	return new Intl.NumberFormat("en-EU", {
+		style: "currency",
+		currency: "EUR",
+	}).format(amount);
+}
