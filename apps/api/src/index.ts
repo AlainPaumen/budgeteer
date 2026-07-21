@@ -13,6 +13,7 @@ import { categoryRoutes } from "./routes/categories";
 import { costTypeRoutes } from "./routes/cost-types";
 import { invoiceRoutes } from "./routes/invoices";
 import { locationRoutes } from "./routes/locations";
+import { reportRoutes } from "./routes/reports";
 import { serviceRoutes } from "./routes/services";
 import { supplierRoutes } from "./routes/suppliers";
 import { tagRoutes } from "./routes/tags";
@@ -64,6 +65,7 @@ const app = new Elysia()
 	.use(costTypeRoutes)
 	.use(categoryRoutes)
 	.use(invoiceRoutes)
+	.use(reportRoutes)
 	.get("/api/health", () => ({
 		status: "ok",
 		timestamp: new Date().toISOString(),
